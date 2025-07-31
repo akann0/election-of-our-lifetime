@@ -1,0 +1,67 @@
+.us-map-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.us-map-container h1 {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+.us-map-svg {
+  width: 100%;
+  max-width: 1000px;
+  height: auto;
+  background-color: white;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.state {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  stroke: #333;
+  stroke-width: 1;
+}
+
+.state:hover {
+  stroke: #000;
+  stroke-width: 2;
+  filter: brightness(0.9);
+}
+
+/* Default state color */
+.state {
+  fill: #e0e0e0;
+}
+
+/* You can add specific state colors here for electoral mapping */
+.state.red {
+  fill: #ff4444;
+}
+
+.state.blue {
+  fill: #4444ff;
+}
+
+.state.purple {
+  fill: #8844ff;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .us-map-container h1 {
+    font-size: 2rem;
+  }
+  
+  .us-map-container {
+    padding: 10px;
+  }
+}

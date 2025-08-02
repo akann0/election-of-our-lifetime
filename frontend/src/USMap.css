@@ -7,6 +7,120 @@
   min-height: 100vh;
 }
 
+.us-map-scoreboard {
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 30px;
+  background-color: white;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scoreboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.scoreboard-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.scoreboard-totals {
+  display: flex;
+  gap: 20px;
+}
+
+.red-total {
+  color: #F44336;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.blue-total {
+  color: #2196F3;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.scoreboard-bar-container {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.scoreboard-bar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.red-bar {
+  background-color: #F44336;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  transition: width 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.blue-bar {
+  background-color: #2196F3;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  transition: width 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.bar-label {
+  font-size: 0.9rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.fifty-percent-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #333;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.fifty-percent-line::before {
+  content: "270";
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
 .us-map-container h1 {
   color: #333;
   margin-bottom: 30px;
@@ -63,5 +177,41 @@
   
   .us-map-container {
     padding: 10px;
+  }
+
+  .us-map-scoreboard {
+    padding: 15px;
+  }
+
+  .scoreboard-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .scoreboard-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .scoreboard-totals {
+    gap: 15px;
+  }
+
+  .red-total, .blue-total {
+    font-size: 1rem;
+  }
+
+  .scoreboard-bar-container {
+    height: 50px;
+  }
+
+  .fifty-percent-line::before {
+    top: -20px;
+    font-size: 0.7rem;
+    padding: 1px 4px;
+  }
+
+  .bar-label {
+    font-size: 0.8rem;
   }
 }

@@ -2,7 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ReactComponent as USMapSVG } from './us-map.svg';
 import './USMap.css';
 
+const ElectoralCollege = new Map([
+  ['AL', 9], ['AK', 3], ['AZ', 11], ['AR', 6], ['CA', 54],
+  ['CO', 10], ['CT', 7], ['DE', 3], ['FL', 30], ['GA', 16],
+  ['HI', 4], ['ID', 4], ['IL', 19], ['IN', 11], ['IA', 6],
+  ['KS', 6], ['KY', 8], ['LA', 8], ['ME', 4], ['MD', 10],
+  ['MA', 11], ['MI', 15], ['MN', 10], ['MS', 6], ['MO', 10],
+  ['MT', 4], ['NE', 5], ['NV', 6], ['NH', 4], ['NJ', 14],
+  ['NM', 5], ['NY', 28], ['NC', 16], ['ND', 3], ['OH', 17],
+  ['OK', 7], ['OR', 8], ['PA', 19], ['RI', 4], ['SC', 9],
+  ['SD', 3], ['TN', 11], ['TX', 40], ['UT', 6], ['VA', 13],
+  ['VT', 3], ['WA', 12], ['WI', 10], ['WV', 4], ['WY', 3],
+  ['DC', 3]
+]);
+
 const USMap = () => {
+  const [scoreboard, setScoreboard] = useState([0, 0]); // [Red, Blue]
   const [stateColors, setStateColors] = useState({});
   const svgRef = useRef(null);
 
@@ -18,6 +33,24 @@ const USMap = () => {
   // Get color for a state, default to light gray if not set
   const getStateColor = (stateId) => {
     return stateColors[stateId] || '#e0e0e0';
+  };
+
+  const updateScoreboard = (colors) => {
+    let redTotal = 0;
+    let blueTotal = 0;
+
+    Object.entries(colors).forEach(([stateId, color]) => {
+      const electoralVotes = ElectoralCollege.get(stateId);
+      if (electoralVotes) {
+        if (color === '#F44336') { // Red
+          redTotal += electoralVotes;
+        } else if (color === '#2196F3') { // Blue
+          blueTotal += electoralVotes;
+        }
+      }
+    });
+
+    setScoreboard([redTotal, blueTotal]);
   };
 
 
@@ -36,6 +69,8 @@ const USMap = () => {
         p.setAttribute("style", "fill: rgb(249,249,249); stroke: black; stroke-width: 1.5px");
       }
     });
+    // Update scoreboard based on current state colors
+    updateScoreboard(stateColors);
   }, [stateColors]);
 
   const handleStateClick = (stateId) => {
@@ -57,6 +92,32 @@ const USMap = () => {
   return (
     <div className="us-map-container">
       <h1>Electoral Map</h1>
+      <div className="us-map-scoreboard">
+        <div className="scoreboard-header">
+          <h2>Electoral Votes</h2>
+          <div className="scoreboard-totals">
+            <span className="red-total">Red: {scoreboard[0]}</span>
+            <span className="blue-total">Blue: {scoreboard[1]}</span>
+          </div>
+        </div>
+        <div className="scoreboard-bar-container">
+          <div className="scoreboard-bar">
+            <div 
+              className="red-bar" 
+              style={{ width: `${(scoreboard[0] / 538) * 100}%` }}
+            >
+              {scoreboard[0] > 0 && <span className="bar-label">{scoreboard[0]}</span>}
+            </div>
+            <div 
+              className="blue-bar" 
+              style={{ width: `${(scoreboard[1] / 538) * 100}%` }}
+            >
+              {scoreboard[1] > 0 && <span className="bar-label">{scoreboard[1]}</span>}
+            </div>
+            <div className="fifty-percent-line"></div>
+          </div>
+        </div>
+      </div>
       <div className="us-map-svg">
         <USMapSVG 
           ref={svgRef}

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ReactComponent as USMapSVG } from './us-map.svg';
+import ElectionService from './ElectionService';
 import './USMap.css';
 
 const ElectoralCollege = new Map([
@@ -19,11 +20,11 @@ const ElectoralCollege = new Map([
 const USMap = () => {
   const [scoreboard, setScoreboard] = useState([0, 0]); // [Red, Blue]
   const [stateColors, setStateColors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const svgRef = useRef(null);
 
   // Function to update state colors - this will be used for electoral coloring
   const updateStateColor = (stateId, color) => {
-    console.log(`Updating color for ${stateId} to ${color}`);
     setStateColors(prev => ({
       ...prev,
       [stateId]: color
@@ -89,15 +90,39 @@ const USMap = () => {
     updateStateColor(stateId, newColor);
   };
 
+  // Handle running the Python script to generate random colors
+  const handleRunRandomColors = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Generating random colors from backend...');
+      const randomColors = await ElectionService.generateRandomColors();
+      console.log('Received random colors:', randomColors);
+      setStateColors(randomColors);
+    } catch (error) {
+      console.error('Error generating random colors:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="us-map-container">
       <h1>Electoral Map</h1>
       <div className="us-map-scoreboard">
         <div className="scoreboard-header">
           <h2>Electoral Votes</h2>
-          <div className="scoreboard-totals">
-            <span className="red-total">Red: {scoreboard[0]}</span>
-            <span className="blue-total">Blue: {scoreboard[1]}</span>
+          <div className="scoreboard-controls">
+            <div className="scoreboard-totals">
+              <span className="red-total">Red: {scoreboard[0]}</span>
+              <span className="blue-total">Blue: {scoreboard[1]}</span>
+            </div>
+            <button 
+              className="run-button" 
+              onClick={handleRunRandomColors}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Running...' : 'Run Random Colors'}
+            </button>
           </div>
         </div>
         <div className="scoreboard-bar-container">

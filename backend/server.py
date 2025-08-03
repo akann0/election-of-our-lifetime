@@ -2,7 +2,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import json
 from datetime import datetime
-import os
+import os, time, random
+from get_election_results import compare_google_trends, load_cache, save_cache
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
@@ -103,6 +104,50 @@ def get_state_results(state_code):
 def get_summary():
     """Get election summary"""
     return jsonify(ELECTION_DATA["summary"])
+
+@app.route('/generate-random-colors')
+def generate_random_colors():
+    """Generate random state colors for the map"""
+
+    
+    # List of all US state codes including DC
+    states = [
+        'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+        'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+        'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+        'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+        'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
+    ]
+    
+    # Color options: Red, Blue
+    colors = ['#F44336', '#2196F3']
+    
+    # Generate random colors for each state
+    state_colors = {}
+    for state in states:
+        state_colors[state] = random.choice(colors)
+    
+    return jsonify({
+        "state_colors": state_colors,
+        "timestamp": datetime.now().isoformat(),
+        "message": "Random state colors generated successfully"
+    })
+
+@app.route('/google-trends/<choice1>/<choice2>')
+def google_trends(choice1, choice2, colors_list=['#F44336', '#2196F3']):
+    """Get Google Trends comparison results"""
+    result = compare_google_trends(choice1, choice2)
+
+    state_colors = {
+        state: colors_list[0] if winner == choice1 else colors_list[1]
+        for state, winner in result['state_winners'].items()
+    }
+
+    return jsonify({
+        "state_colors": state_colors,
+        "timestamp": datetime.now().isoformat(),
+        "message": "Random state colors generated successfully"
+    })
 
 @app.route('/health')
 def health_check():

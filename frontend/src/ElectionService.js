@@ -91,6 +91,42 @@ class ElectionService {
     }
     return count.toString();
   }
+
+  // Generate random state colors from backend
+  async generateRandomColors() {
+    try {
+      const response = await fetch(`${this.baseUrl}/google-trends/pizza/burger`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.state_colors;
+    } catch (error) {
+      console.error('Error generating random colors:', error);
+      // Return mock random colors for development
+      return this.getMockRandomColors();
+    }
+  }
+
+  // Mock random colors for development/testing
+  getMockRandomColors() {
+    const states = [
+      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
+    ];
+    
+    const colors = ['#F44336', '#2196F3', '#e0e0e0'];
+    const stateColors = {};
+    
+    states.forEach(state => {
+      stateColors[state] = colors[Math.floor(Math.random() * colors.length)];
+    });
+    
+    return stateColors;
+  }
 }
 
 export default new ElectionService();

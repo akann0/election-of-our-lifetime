@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import os, time, random
 from get_election_results import compare_google_trends, load_cache, save_cache
+from sentiment_service import sentiment_service
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
@@ -133,21 +134,87 @@ def generate_random_colors():
         "message": "Random state colors generated successfully"
     })
 
+def choose_colors(choice1, choice2):
+    """Choose colors for the two choices"""
+    return ["#F44336", "#2196F3"]
+
 @app.route('/google-trends/<choice1>/<choice2>')
-def google_trends(choice1, choice2, colors_list=['#F44336', '#2196F3']):
+def google_trends(choice1, choice2):
     """Get Google Trends comparison results"""
-    result = compare_google_trends(choice1, choice2)
+    try:
+        result = compare_google_trends(choice1, choice2)
+        colors = choose_colors(choice1, choice2)
+        
+        # Create state colors based on winners
+        state_colors = {}
+        for state, winner in result['state_winners'].items():
+            if winner == choice1:
+                state_colors[state] = colors[0]  # Red for choice1
+            elif winner == choice2:
+                state_colors[state] = colors[1]  # Blue for choice2
+            else:
+                state_colors[state] = '#e0e0e0'  # Gray for unknown
+        
+        return jsonify({
+            "state_colors": state_colors,
+            "state_scores": result.get('state_scores', {}),
+            "electoral_tally": result.get('electoral_tally', {}),
+            "winner": result.get('winner', ''),
+            "metadata": result.get('metadata', {}),
+            "timestamp": datetime.now().isoformat(),
+            "message": f"Google Trends comparison: {choice1} vs {choice2}"
+        })
+        
+    except Exception as e:
+        print(f"Error in google_trends endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
 
-    state_colors = {
-        state: colors_list[0] if winner == choice1 else colors_list[1]
-        for state, winner in result['state_winners'].items()
-    }
+@app.route('/sentiment/<choice1>/<choice2>')
+def get_sentiment_analysis(choice1, choice2):
+    """Get sentiment analysis for two choices"""
+    try:
+        sentiment_summary = sentiment_service.get_sentiment_summary(choice1, choice2)
+        
+        return jsonify({
+            "sentiment_data": sentiment_summary["sentiment_data"],
+            "sentiment_summary": sentiment_summary,
+            "timestamp": datetime.now().isoformat(),
+            "message": f"Sentiment analysis: {choice1} vs {choice2}"
+        })
+        
+    except Exception as e:
+        print(f"Error in sentiment analysis endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
 
-    return jsonify({
-        "state_colors": state_colors,
-        "timestamp": datetime.now().isoformat(),
-        "message": "Random state colors generated successfully"
-    })
+@app.route('/combined-analysis/<choice1>/<choice2>')
+def get_combined_analysis(choice1, choice2):
+    """Get both search volume and sentiment analysis"""
+    try:
+        # Get search volume data
+        search_results = compare_google_trends(choice1, choice2)
+        
+        # Get sentiment data
+        sentiment_results = sentiment_service.analyze_sentiment(choice1, choice2)
+        sentiment_summary = sentiment_service.get_sentiment_summary(choice1, choice2)
+        
+        # Combine results (for now, just return both separately)
+        combined_results = {
+            "search_data": search_results,
+            "sentiment_data": sentiment_results,
+            "sentiment_summary": sentiment_summary,
+            "metadata": {
+                "choice1": choice1,
+                "choice2": choice2,
+                "timestamp": datetime.now().isoformat(),
+                "analysis_type": "combined"
+            }
+        }
+        
+        return jsonify(combined_results)
+        
+    except Exception as e:
+        print(f"Error in combined analysis endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/health')
 def health_check():

@@ -1,0 +1,59 @@
+{
+    "weighted_public_opinion_index": [
+        {
+            "subreddit": "r/news",
+            "skew": "General news, slightly left",
+            "weight": 15
+        },
+        {
+            "subreddit": "r/AskReddit",
+            "skew": "Broad participation",
+            "weight": 15
+        },
+        {
+            "subreddit": "r/politics",
+            "skew": "Progressive political voice",
+            "weight": 10
+        },
+        {
+            "subreddit": "r/Conservative",
+            "skew": "Conservative political voice",
+            "weight": 10
+        },
+        {
+            "subreddit": "r/television",
+            "skew": "Pop culture",
+            "weight": 8
+        },
+        {
+            "subreddit": "r/movies",
+            "skew": "Pop culture",
+            "weight": 7
+        },
+        {
+            "subreddit": "r/technology",
+            "skew": "Tech/culture",
+            "weight": 8
+        },
+        {
+            "subreddit": "r/UnitedStates",
+            "skew": "Geographic focus",
+            "weight": 7
+        },
+        {
+            "subreddit": "r/OutOfTheLoop",
+            "skew": "Internet trending topics",
+            "weight": 10
+        },
+        {
+            "subreddit": "r/technology",
+            "skew": "Tech/culture",
+            "weight": 5
+        },
+        {
+            "subreddit": "r/changeMyView",
+            "skew": "Moral norms/values",
+            "weight": 7
+        }
+    ]
+}

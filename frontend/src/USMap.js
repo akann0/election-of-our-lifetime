@@ -17,10 +17,11 @@ const ElectoralCollege = new Map([
   ['DC', 3]
 ]);
 
-const USMap = () => {
+const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoading }) => {
   const [scoreboard, setScoreboard] = useState([0, 0]); // [Red, Blue]
   const [stateColors, setStateColors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [currentComparison, setCurrentComparison] = useState('');
   const svgRef = useRef(null);
 
   // Function to update state colors - this will be used for electoral coloring
@@ -54,7 +55,6 @@ const USMap = () => {
     setScoreboard([redTotal, blueTotal]);
   };
 
-
   // Apply fills whenever colors change
   useEffect(() => {
     if (!svgRef.current) return;
@@ -74,6 +74,17 @@ const USMap = () => {
     updateScoreboard(stateColors);
   }, [stateColors]);
 
+  // Handle comparison when choice1 and choice2 change
+  useEffect(() => {
+    if (choice1 && choice2 && choice1 !== choice2) {
+      const comparison = `${choice1} vs ${choice2}`;
+      if (comparison !== currentComparison) {
+        setCurrentComparison(comparison);
+        handleRunComparison(choice1, choice2);
+      }
+    }
+  }, [choice1, choice2]);
+
   const handleStateClick = (stateId) => {
     // Cycle through colors: gray -> red -> blue -> gray
     console.log(`State clicked: ${stateId}`);
@@ -90,7 +101,31 @@ const USMap = () => {
     updateStateColor(stateId, newColor);
   };
 
-  // Handle running the Python script to generate random colors
+  // Handle running the comparison with user-provided choices
+  const handleRunComparison = async (choice1, choice2) => {
+    setIsLoading(true);
+    try {
+      console.log(`Comparing ${choice1} vs ${choice2} with combined analysis...`);
+      const comparisonResults = await ElectionService.compareChoices(choice1, choice2);
+      console.log('Received comparison results:', comparisonResults);
+      setStateColors(comparisonResults.state_colors);
+      
+      // You can also access the detailed analysis data if needed:
+      // console.log('Trends data:', comparisonResults.trends_data);
+      // console.log('Sentiment data:', comparisonResults.sentiment_data);
+      // console.log('Analysis summary:', comparisonResults.analysis_summary);
+      
+    } catch (error) {
+      console.error('Error comparing choices:', error);
+    } finally {
+      setIsLoading(false);
+      if (onComparisonComplete) {
+        onComparisonComplete();
+      }
+    }
+  };
+
+  // Legacy function for random colors (kept for backward compatibility)
   const handleRunRandomColors = async () => {
     setIsLoading(true);
     try {
@@ -105,24 +140,46 @@ const USMap = () => {
     }
   };
 
+  const isCurrentlyLoading = isLoading || parentIsLoading;
+
   return (
     <div className="us-map-container">
-      <h1>Electoral Map</h1>
+      <div className="us-map-header">
+        <h1>Electoral Map</h1>
+        {currentComparison && (
+          <div className="current-comparison">
+            <h2>Comparing: {currentComparison}</h2>
+            <div className="comparison-legend">
+              <span className="legend-item">
+                <span className="legend-color red"></span>
+                {choice1}
+              </span>
+              <span className="legend-item">
+                <span className="legend-color blue"></span>
+                {choice2}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+      
       <div className="us-map-scoreboard">
         <div className="scoreboard-header">
           <h2>Electoral Votes</h2>
           <div className="scoreboard-controls">
             <div className="scoreboard-totals">
-              <span className="red-total">Red: {scoreboard[0]}</span>
-              <span className="blue-total">Blue: {scoreboard[1]}</span>
+              <span className="red-total">{choice1 || 'Red'}: {scoreboard[0]}</span>
+              <span className="blue-total">{choice2 || 'Blue'}: {scoreboard[1]}</span>
             </div>
-            <button 
-              className="run-button" 
-              onClick={handleRunRandomColors}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Running...' : 'Run Random Colors'}
-            </button>
+            {!currentComparison && (
+              <button 
+                className="run-button" 
+                onClick={handleRunRandomColors}
+                disabled={isCurrentlyLoading}
+              >
+                {isCurrentlyLoading ? 'Running...' : 'Run Random Colors'}
+              </button>
+            )}
           </div>
         </div>
         <div className="scoreboard-bar-container">
@@ -143,6 +200,14 @@ const USMap = () => {
           </div>
         </div>
       </div>
+      
+      {isCurrentlyLoading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <p>Loading comparison data...</p>
+        </div>
+      )}
+      
       <div className="us-map-svg">
         <USMapSVG 
           ref={svgRef}

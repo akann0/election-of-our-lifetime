@@ -1,0 +1,458 @@
+{
+  "reddit_Netflix_Disney": {
+    "sentiment": {
+      "Netflix": 0.1858,
+      "Disney": -0.2524666666666667
+    },
+    "timestamp": 1754284272.7104583,
+    "posts_analyzed": 6
+  },
+  "reddit_CNN_Fox News": {
+    "sentiment": {
+      "CNN": -0.09389347368421055,
+      "Fox News": -0.16239460784313728
+    },
+    "timestamp": 1754297114.460105,
+    "posts_analyzed": 88,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "reddit_Yankees_Dodgers": {
+    "sentiment": {
+      "Yankees": -0.02131821052631579,
+      "Dodgers": 0.03856729166666666
+    },
+    "timestamp": 1754296258.3583822,
+    "posts_analyzed": 72,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "Yankees|||Dodgers": {
+    "source_breakdown": {
+      "reddit": {
+        "Yankees": -0.02131821052631579,
+        "Dodgers": 0.03856729166666666
+      }
+    },
+    "metadata": {
+      "choice1": "Yankees",
+      "choice2": "Dodgers",
+      "timestamp": 1754296258.3593833,
+      "sources": [
+        "reddit",
+        "news"
+      ]
+    }
+  },
+  "CNN|||Fox News": {
+    "sentiment_scores": {
+      "CNN": -0.09389347368421055,
+      "Fox News": -0.16239460784313728
+    },
+    "source_breakdown": {
+      "reddit": {
+        "CNN": -0.09389347368421055,
+        "Fox News": -0.16239460784313728
+      }
+    },
+    "metadata": {
+      "choice1": "CNN",
+      "choice2": "Fox News",
+      "timestamp": 1754296384.782212,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_Taylor Swift_Beyonc\u00e9": {
+    "sentiment": {
+      "Taylor Swift": 0.16062694736842106,
+      "Beyonc\u00e9": -0.10811829268292679
+    },
+    "timestamp": 1754296408.3425562,
+    "posts_analyzed": 75,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "Taylor Swift|||Beyonc\u00e9": {
+    "sentiment_scores": {
+      "Taylor Swift": 0.16062694736842106,
+      "Beyonc\u00e9": -0.10811829268292679
+    },
+    "source_breakdown": {
+      "reddit": {
+        "Taylor Swift": 0.16062694736842106,
+        "Beyonc\u00e9": -0.10811829268292679
+      }
+    },
+    "metadata": {
+      "choice1": "Taylor Swift",
+      "choice2": "Beyonc\u00e9",
+      "timestamp": 1754296408.3445563,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_sweatpants_jeans": {
+    "sentiment": {
+      "sweatpants": 0.20242935323383085,
+      "jeans": -0.1104759298245614
+    },
+    "timestamp": 1754296565.8414054,
+    "posts_analyzed": 62,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "sweatpants|||jeans": {
+    "sentiment_scores": {
+      "sweatpants": 0.20242935323383085,
+      "jeans": -0.1104759298245614
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sweatpants": 0.20242935323383085,
+        "jeans": -0.1104759298245614
+      }
+    },
+    "metadata": {
+      "choice1": "sweatpants",
+      "choice2": "jeans",
+      "timestamp": 1754296565.8434079,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_rock_paper": {
+    "sentiment": {
+      "rock": -0.04134673684210527,
+      "paper": -0.15337831578947364
+    },
+    "timestamp": 1754296888.4450274,
+    "posts_analyzed": 100,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "rock|||paper": {
+    "sentiment_scores": {
+      "rock": -0.04134673684210527,
+      "paper": -0.15337831578947364
+    },
+    "source_breakdown": {
+      "reddit": {
+        "rock": -0.04134673684210527,
+        "paper": -0.15337831578947364
+      }
+    },
+    "metadata": {
+      "choice1": "rock",
+      "choice2": "paper",
+      "timestamp": 1754296888.4460566,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_scissors_paper": {
+    "sentiment": {
+      "scissors": -0.1918894736842105,
+      "paper": -0.15337831578947364
+    },
+    "timestamp": 1754297143.7991064,
+    "posts_analyzed": 83,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "scissors|||paper": {
+    "sentiment_scores": {
+      "scissors": -0.1918894736842105,
+      "paper": -0.15337831578947364
+    },
+    "source_breakdown": {
+      "reddit": {
+        "scissors": -0.1918894736842105,
+        "paper": -0.15337831578947364
+      }
+    },
+    "metadata": {
+      "choice1": "scissors",
+      "choice2": "paper",
+      "timestamp": 1754297143.8021364,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_wood_brick": {
+    "sentiment": {
+      "wood": -0.11174063157894738,
+      "brick": -0.10114231578947366
+    },
+    "timestamp": 1754297213.1724446,
+    "posts_analyzed": 93,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "wood|||brick": {
+    "sentiment_scores": {
+      "wood": -0.11174063157894738,
+      "brick": -0.10114231578947366
+    },
+    "source_breakdown": {
+      "reddit": {
+        "wood": -0.11174063157894738,
+        "brick": -0.10114231578947366
+      }
+    },
+    "metadata": {
+      "choice1": "wood",
+      "choice2": "brick",
+      "timestamp": 1754297213.1744106,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_Epstein_Jesus": {
+    "sentiment": {
+      "Epstein": -0.09645873684210526,
+      "Jesus": -0.0010270175438596458
+    },
+    "timestamp": 1754297267.6438248,
+    "posts_analyzed": 89,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "Epstein|||Jesus": {
+    "sentiment_scores": {
+      "Epstein": -0.09645873684210526,
+      "Jesus": -0.0010270175438596458
+    },
+    "source_breakdown": {
+      "reddit": {
+        "Epstein": -0.09645873684210526,
+        "Jesus": -0.0010270175438596458
+      }
+    },
+    "metadata": {
+      "choice1": "Epstein",
+      "choice2": "Jesus",
+      "timestamp": 1754297267.6468372,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_Jeffery Epstein_Jesus Christ": {
+    "sentiment": {
+      "Jeffery Epstein": -0.18511403508771931,
+      "Jesus Christ": 0.024848358208955222
+    },
+    "timestamp": 1754297342.5193686,
+    "posts_analyzed": 39,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "Jeffery Epstein|||Jesus Christ": {
+    "sentiment_scores": {
+      "Jeffery Epstein": -0.18511403508771931,
+      "Jesus Christ": 0.024848358208955222
+    },
+    "source_breakdown": {
+      "reddit": {
+        "Jeffery Epstein": -0.18511403508771931,
+        "Jesus Christ": 0.024848358208955222
+      }
+    },
+    "metadata": {
+      "choice1": "Jeffery Epstein",
+      "choice2": "Jesus Christ",
+      "timestamp": 1754297342.5203307,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_Jeffery Epstein_birthday party": {
+    "sentiment": {
+      "Jeffery Epstein": -0.18511403508771931,
+      "birthday party": 0.3178085416666667
+    },
+    "timestamp": 1754297439.2095866,
+    "posts_analyzed": 32,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "Jeffery Epstein|||birthday party": {
+    "sentiment_scores": {
+      "Jeffery Epstein": -0.18511403508771931,
+      "birthday party": 0.3178085416666667
+    },
+    "source_breakdown": {
+      "reddit": {
+        "Jeffery Epstein": -0.18511403508771931,
+        "birthday party": 0.3178085416666667
+      }
+    },
+    "metadata": {
+      "choice1": "Jeffery Epstein",
+      "choice2": "birthday party",
+      "timestamp": 1754297439.2166011,
+      "sources": [
+        "reddit"
+      ]
+    }
+  },
+  "reddit_the devil_rocky road": {
+    "sentiment": {
+      "the devil": -0.4776175280898876,
+      "rocky road": 0.13294666666666669
+    },
+    "timestamp": 1754297756.6278708,
+    "posts_analyzed": 46,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView"
+    ]
+  },
+  "the devil|||rocky road": {
+    "sentiment_scores": {
+      "the devil": -0.4776175280898876,
+      "rocky road": 0.13294666666666669
+    },
+    "source_breakdown": {
+      "reddit": {
+        "the devil": -0.4776175280898876,
+        "rocky road": 0.13294666666666669
+      }
+    },
+    "metadata": {
+      "choice1": "the devil",
+      "choice2": "rocky road",
+      "timestamp": 1754297756.6348736,
+      "sources": [
+        "reddit"
+      ]
+    }
+  }
+}

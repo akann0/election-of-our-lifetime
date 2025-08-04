@@ -20,6 +20,174 @@ class ElectionService {
     }
   }
 
+  // Combined analysis: Google Trends + Sentiment Analysis
+  async compareChoices(choice1, choice2) {
+    try {
+      console.log(`Comparing ${choice1} vs ${choice2} with combined analysis...`);
+      
+      // Get both Google Trends and sentiment analysis
+      const [trendsResponse, sentimentResponse] = await Promise.all([
+        fetch(`${this.baseUrl}/google-trends/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`),
+        fetch(`${this.baseUrl}/sentiment/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`)
+      ]);
+
+      if (!trendsResponse.ok) {
+        throw new Error(`Google Trends HTTP error! status: ${trendsResponse.status}`);
+      }
+      if (!sentimentResponse.ok) {
+        throw new Error(`Sentiment HTTP error! status: ${sentimentResponse.status}`);
+      }
+
+      const trendsData = await trendsResponse.json();
+      const sentimentData = await sentimentResponse.json();
+
+      console.log('Trends data:', trendsData);
+      console.log('Sentiment data:', sentimentData);
+
+      // Combine the data into weighted state colors
+      const combinedColors = this.combineTrendsAndSentiment(
+        trendsData.state_colors,
+        sentimentData.sentiment_summary,
+        choice1,
+        choice2
+      );
+
+      return {
+        state_colors: combinedColors,
+        trends_data: trendsData,
+        sentiment_data: sentimentData,
+        analysis_summary: {
+          choice1: {
+            trends_score: trendsData.choice1_score || 0,
+            sentiment_score: sentimentData.sentiment_summary?.choice1_sentiment?.score || 0
+          },
+          choice2: {
+            trends_score: trendsData.choice2_score || 0,
+            sentiment_score: sentimentData.sentiment_summary?.choice2_sentiment?.score || 0
+          }
+        }
+      };
+
+    } catch (error) {
+      console.error('Error in combined analysis:', error);
+      // Return mock comparison data for development
+      return {
+        state_colors: this.getMockComparisonData(choice1, choice2),
+        trends_data: { choice1_score: 0, choice2_score: 0 },
+        sentiment_data: { sentiment_summary: { choice1_sentiment: { score: 0 }, choice2_sentiment: { score: 0 } } },
+        analysis_summary: {
+          choice1: { trends_score: 0, sentiment_score: 0 },
+          choice2: { trends_score: 0, sentiment_score: 0 }
+        }
+      };
+    }
+  }
+
+  // Combine Google Trends and sentiment analysis into weighted state colors
+  combineTrendsAndSentiment(trendsColors, sentimentSummary, choice1, choice2) {
+    const states = [
+      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
+    ];
+
+    // Weights for combining trends and sentiment
+    const TRENDS_WEIGHT = 0.6;  // 60% weight for Google Trends
+    const SENTIMENT_WEIGHT = 0.4; // 40% weight for sentiment analysis
+
+    const combinedColors = {};
+
+    // Get sentiment scores
+    const sentiment1 = sentimentSummary?.choice1_sentiment?.score || 0;
+    const sentiment2 = sentimentSummary?.choice2_sentiment?.score || 0;
+
+    states.forEach(state => {
+      const trendsColor = trendsColors[state];
+      
+      if (!trendsColor) {
+        // If no trends data, use sentiment only
+        combinedColors[state] = sentiment1 > sentiment2 ? '#F44336' : '#2196F3';
+        return;
+      }
+
+      // Determine which choice the trends favor
+      const trendsFavorsChoice1 = trendsColor === '#F44336'; // Red = choice1
+      const trendsFavorsChoice2 = trendsColor === '#2196F3'; // Blue = choice2
+
+      // Calculate sentiment advantage
+      const sentimentAdvantage = sentiment1 - sentiment2;
+      const sentimentThreshold = 0.1; // Minimum sentiment difference to matter
+
+      let finalColor = trendsColor; // Default to trends color
+
+      // If sentiment strongly favors one choice, adjust the color
+      if (Math.abs(sentimentAdvantage) > sentimentThreshold) {
+        if (sentimentAdvantage > 0) {
+          // Sentiment favors choice1
+          if (trendsFavorsChoice2) {
+            // Trends and sentiment disagree - use weighted decision
+            finalColor = sentimentAdvantage > 0.3 ? '#F44336' : '#2196F3';
+          }
+        } else {
+          // Sentiment favors choice2
+          if (trendsFavorsChoice1) {
+            // Trends and sentiment disagree - use weighted decision
+            finalColor = Math.abs(sentimentAdvantage) > 0.3 ? '#2196F3' : '#F44336';
+          }
+        }
+      }
+
+      combinedColors[state] = finalColor;
+    });
+
+    return combinedColors;
+  }
+
+  // Compare Google Trends for two search terms (legacy function)
+  async compareGoogleTrends(choice1, choice2) {
+    try {
+      console.log(`Comparing trends for: ${choice1} vs ${choice2}`);
+      const response = await fetch(`${this.baseUrl}/google-trends/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Comparison results:', data);
+      return data.state_colors;
+    } catch (error) {
+      console.error('Error comparing Google Trends:', error);
+      // Return mock comparison data for development
+      return this.getMockComparisonData(choice1, choice2);
+    }
+  }
+
+  // Mock comparison data for development/testing
+  getMockComparisonData(choice1, choice2) {
+    const states = [
+      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'DC'
+    ];
+    
+    const stateColors = {};
+    
+    states.forEach(state => {
+      // Simple mock logic: alternate between choices based on state name
+      const stateIndex = states.indexOf(state);
+      if (stateIndex % 2 === 0) {
+        stateColors[state] = '#F44336'; // Red for choice1
+      } else {
+        stateColors[state] = '#2196F3'; // Blue for choice2
+      }
+    });
+    
+    return stateColors;
+  }
+
   // Mock election data for development/testing
   getMockElectionData() {
     return {

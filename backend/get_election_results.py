@@ -39,53 +39,143 @@ def compare_google_trends(choice1, choice2, timeframe="now 7-d", sleep_between=1
     """
     Compare choice1 vs choice2 in each U.S. state using Google Trends (via PyTrends),
     tally electoral votes, and return per-state winners plus overall result.
+    Uses a single API call to get all state data at once.
+
+    NOTE: estimates for actual numerical values used for previously cached states
     """
     pytrends = TrendReq(hl="en-US", tz=0)
     cache = load_cache()
     state_winners = {}
+    state_scores = {}  # Initialize state_scores dictionary
     electoral_tally = defaultdict(int)
-
-    for state, geo in STATE_GEO.items():
+    
+    # Check cache for existing results first
+    cached_states = set()
+    for state in STATE_GEO.keys():
         key = f"{choice1}|||{choice2}|||{state}|||{timeframe}"
         reverse_key = f"{choice2}|||{choice1}|||{state}|||{timeframe}"
-
+        
         if key in cache:
             winner = cache[key]
+            state_winners[state] = winner
+            electoral_tally[winner] += ELECTORAL_COLLEGE[state]
+            cached_states.add(state)
         elif reverse_key in cache:
             prev = cache[reverse_key]
             winner = choice1 if prev == choice2 else choice2
-        else:
-            try:
-                pytrends.build_payload([choice1, choice2], geo=geo, timeframe=timeframe)
-                df = pytrends.interest_over_time()
-                print(df)
-                if df.empty:
+            state_winners[state] = winner
+            electoral_tally[winner] += ELECTORAL_COLLEGE[state]
+            cached_states.add(state)
+    
+    # Get data for uncached states in a single API call
+    uncached_states = set(STATE_GEO.keys()) - cached_states
+    if uncached_states:
+        try:
+            # Build payload for the two choices across all US states
+            pytrends.build_payload([choice1, choice2], geo="US", timeframe=timeframe)
+            
+            # Get interest by region (states) with geo codes
+            df = pytrends.interest_by_region(resolution='REGION', inc_low_vol=True, inc_geo_code=True)
+            
+            
+            if not df.empty:
+                # Process each state's data once and store both winners and numeric values
+                for state in uncached_states:
+                    geo_code = STATE_GEO[state]
+                    
+                    # Try to find the state data
+                    state_data = df[df.geoCode == geo_code]
+                    
+                    if state_data is not None and not state_data.empty:
+                        val1 = int(state_data[choice1].iloc[0]) if choice1 in state_data.columns else 0
+                        val2 = int(state_data[choice2].iloc[0]) if choice2 in state_data.columns else 0
+                        winner = choice1 if val1 >= val2 else choice2
+                        
+                        # Store the numeric values for this state
+                        state_scores[state] = {
+                            choice1: val1,
+                            choice2: val2,
+                            'winner': winner,
+                            'margin': abs(val1 - val2)
+                        }
+                    else:
+                        # State not found in results, use fallback
+                        winner = choice1
+                        state_scores[state] = {
+                            choice1: 50,
+                            choice2: 50,
+                            'winner': winner,
+                            'margin': 0
+                        }
+                    
+                    # Cache the result
+                    key = f"{choice1}|||{choice2}|||{state}|||{timeframe}"
+                    cache[key] = winner
+                    
+                    state_winners[state] = winner
+                    electoral_tally[winner] += ELECTORAL_COLLEGE[state]
+            else:
+                # No data returned, use fallback for all uncached states
+                for state in uncached_states:
                     winner = choice1  # fallback tie-breaker
-                else:
-                    latest = df.iloc[-1]
-                    val1 = latest.get(choice1, 0)
-                    val2 = latest.get(choice2, 0)
-                    winner = choice1 if val1 >= val2 else choice2
-                cache[key] = winner
-                time.sleep(sleep_between)
-            except Exception as e:
-                # On error, fallback deterministically
-                print(f"[WARN] Trends fetch failed for {state} ({geo}): {e}")
+                    key = f"{choice1}|||{choice2}|||{state}|||{timeframe}"
+                    cache[key] = winner
+                    state_winners[state] = winner
+                    electoral_tally[winner] += ELECTORAL_COLLEGE[state]
+                    
+                    # Use fallback numeric values
+                    state_scores[state] = {
+                        choice1: 50,
+                        choice2: 50,
+                        'winner': winner,
+                        'margin': 0
+                    }
+                    
+        except Exception as e:
+            # On error, fallback deterministically for all uncached states
+            print(f"[WARN] Trends fetch failed for uncached states: {e}")
+            for state in uncached_states:
                 winner = choice1
+                key = f"{choice1}|||{choice2}|||{state}|||{timeframe}"
                 cache[key] = winner
-
-        state_winners[state] = winner
-        electoral_tally[winner] += ELECTORAL_COLLEGE[state]
-
+                state_winners[state] = winner
+                electoral_tally[winner] += ELECTORAL_COLLEGE[state]
+                
+                # Use fallback numeric values for error cases
+                state_scores[state] = {
+                    choice1: 50,
+                    choice2: 50,
+                    'winner': winner,
+                    'margin': 0
+                }
+    
     save_cache(cache)
     overall = max(electoral_tally.items(), key=lambda x: x[1])[0]
+    
+    # Add cached states to state_scores with estimated values
+    for state in cached_states:
+        if state not in state_scores:  # Only add if not already processed
+            winner = state_winners[state]
+            state_scores[state] = {
+                choice1: 60 if winner == choice1 else 40,
+                choice2: 60 if winner == choice2 else 40,
+                'winner': winner,
+                'margin': 20
+            }
+    
+    print("Google Trends Overall winner: ", overall)
+    
     return {
         "state_winners": state_winners,
+        "state_scores": state_scores,  # NEW: Numeric values per state
         "electoral_tally": dict(electoral_tally),
-        "winner": overall
+        "winner": overall,
+        "metadata": {
+            "choice1": choice1,
+            "choice2": choice2,
+            "timeframe": timeframe,
+            "total_states": len(state_winners),
+            "cached_states": len(cached_states),
+            "uncached_states": len(uncached_states) if 'uncached_states' in locals() else 0
+        }
     }
-
-pytrends = TrendReq(hl="en-US", tz=0)
-pytrends.build_payload(["Joe", "John"], geo="US", timeframe="now 7-d")
-df = pytrends.interest_by_region(resolution='REGION', inc_low_vol=True, inc_geo_code=True)
-print(df)

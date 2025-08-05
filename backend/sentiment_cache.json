@@ -9,11 +9,57 @@
   },
   "reddit_CNN_Fox News": {
     "sentiment": {
-      "CNN": -0.09389347368421055,
-      "Fox News": -0.16239460784313728
+      "sentiment_scores": {
+        "CNN": -0.10249999999999997,
+        "Fox News": -0.082471875
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "CNN": -0.130825,
+          "Fox News": 0.060725,
+          "weight": 4
+        },
+        "center-right": {
+          "CNN": 0.0,
+          "Fox News": 0.0,
+          "weight": 0
+        },
+        "center": {
+          "CNN": -0.2235261904761905,
+          "Fox News": -0.11091130952380952,
+          "weight": 14
+        },
+        "center-left": {
+          "CNN": 0.04712000000000001,
+          "Fox News": -0.19761333333333334,
+          "weight": 18
+        },
+        "liberal": {
+          "CNN": -0.233325,
+          "Fox News": -0.13695000000000002,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 72,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView"
+        ],
+        "total_weight": 102
+      }
     },
-    "timestamp": 1754297114.460105,
-    "posts_analyzed": 88,
+    "timestamp": 1754384632.8210664,
+    "posts_analyzed": 72,
     "subreddits_used": [
       "news",
       "AskReddit",

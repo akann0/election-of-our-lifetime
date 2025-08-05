@@ -5,7 +5,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from collections import defaultdict
 import praw
-from backend.all_api_config import get_reddit_credentials
+from all_api_config import get_reddit_credentials
 
 # Simple disk cache filename for sentiment data
 SENTIMENT_CACHE_FILE = "sentiment_cache.json"
@@ -141,8 +141,6 @@ class SentimentService:
                 
                 # Calculate how many titles to pull based on weight proportion
                 titles_for_this_subreddit = max(1, int((weight / total_weight) * TITLES_ANALYZED))
-                
-                print(f"r/{subreddit_name}: weight={weight}, pulling {titles_for_this_subreddit} titles per choice")
                 
                 try:
                     # Get posts from this specific subreddit

@@ -5,7 +5,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from collections import defaultdict
 import praw
-from reddit_config import get_reddit_credentials
+from backend.all_api_config import get_reddit_credentials
 
 # Simple disk cache filename for sentiment data
 SENTIMENT_CACHE_FILE = "sentiment_cache.json"
@@ -98,8 +98,8 @@ class SentimentService:
         weighted_sum = sum(sentiment * weight for sentiment, weight in weighted_sentiments)
         return weighted_sum / total_weight
     
-    def get_reddit_sentiment(self, choice1: str, choice2: str, test_mode: bool = False) -> Dict[str, float]:
-        """Get sentiment scores from Reddit using weighted subreddit approach"""
+    def get_reddit_sentiment(self, choice1: str, choice2: str, test_mode: bool = False) -> Dict:
+        """Get sentiment scores from Reddit using weighted subreddit approach with demographics"""
         cache_key = f"reddit_{choice1}_{choice2}"
         TITLES_ANALYZED = 50
         
@@ -118,32 +118,57 @@ class SentimentService:
             # Load weighted subreddit configuration
             subreddit_weights = self.load_subreddit_weights()
             
-            # Get sentiment from each subreddit with weights
+            # Get sentiment from each subreddit with weights and demographics
             weighted_sentiments1 = []
             weighted_sentiments2 = []
+            demographic_breakdown = {
+                'conservative': {'choice1': [], 'choice2': [], 'weight': 0},
+                'center-right': {'choice1': [], 'choice2': [], 'weight': 0},
+                'center': {'choice1': [], 'choice2': [], 'weight': 0},
+                'center-left': {'choice1': [], 'choice2': [], 'weight': 0},
+                'liberal': {'choice1': [], 'choice2': [], 'weight': 0}
+            }
             total_posts_analyzed = 0
             successful_subreddits = []
+            
+            # Calculate total weight to determine proportional title allocation
+            total_weight = sum(info['weight'] for info in subreddit_weights)
             
             for subreddit_info in subreddit_weights:
                 subreddit_name = subreddit_info['subreddit'].replace('r/', '')
                 weight = subreddit_info['weight']
+                political_leaning = subreddit_info.get('demographics', {}).get('political_leaning', 'center')
+                
+                # Calculate how many titles to pull based on weight proportion
+                titles_for_this_subreddit = max(1, int((weight / total_weight) * TITLES_ANALYZED))
+                
+                print(f"r/{subreddit_name}: weight={weight}, pulling {titles_for_this_subreddit} titles per choice")
                 
                 try:
                     # Get posts from this specific subreddit
                     subreddit = self.reddit.subreddit(subreddit_name)
                     
-                    # Get top 2 posts for each term from this subreddit
-                    posts1 = list(subreddit.search(choice1, limit=(TITLES_ANALYZED/len(subreddit_weights)), time_filter='year'))
-                    posts2 = list(subreddit.search(choice2, limit=(TITLES_ANALYZED/len(subreddit_weights)), time_filter='year'))
+                    # Pull titles proportional to weight
+                    posts1 = list(subreddit.search(choice1, limit=titles_for_this_subreddit, time_filter='year'))
+                    posts2 = list(subreddit.search(choice2, limit=titles_for_this_subreddit, time_filter='year'))
                     
                     # Analyze titles
                     if posts1:
                         sentiment1 = self.analyze_titles_sentiment([post.title for post in posts1])
-                        weighted_sentiments1.append((sentiment1, weight))
+                        # Use the number of posts as the weight for averaging (since weight determined sample size)
+                        weighted_sentiments1.append((sentiment1, len(posts1)))
+                        # Track demographic breakdown
+                        if political_leaning in demographic_breakdown:
+                            demographic_breakdown[political_leaning]['choice1'].append(sentiment1)
+                            demographic_breakdown[political_leaning]['weight'] += len(posts1)
                     
                     if posts2:
                         sentiment2 = self.analyze_titles_sentiment([post.title for post in posts2])
-                        weighted_sentiments2.append((sentiment2, weight))
+                        # Use the number of posts as the weight for averaging (since weight determined sample size)
+                        weighted_sentiments2.append((sentiment2, len(posts2)))
+                        # Track demographic breakdown
+                        if political_leaning in demographic_breakdown:
+                            demographic_breakdown[political_leaning]['choice2'].append(sentiment2)
                     
                     total_posts_analyzed += len(posts1) + len(posts2)
                     successful_subreddits.append(subreddit_name)
@@ -156,7 +181,24 @@ class SentimentService:
             sentiment1 = self.calculate_weighted_average(weighted_sentiments1)
             sentiment2 = self.calculate_weighted_average(weighted_sentiments2)
             
-            result = {choice1: sentiment1, choice2: sentiment2}
+            # Calculate demographic averages
+            demographic_sentiment = {}
+            for leaning, data in demographic_breakdown.items():
+                demographic_sentiment[leaning] = {
+                    choice1: sum(data['choice1']) / len(data['choice1']) if data['choice1'] else 0.0,
+                    choice2: sum(data['choice2']) / len(data['choice2']) if data['choice2'] else 0.0,
+                    'weight': data['weight']
+                }
+            
+            result = {
+                'sentiment_scores': {choice1: sentiment1, choice2: sentiment2},
+                'demographic_breakdown': demographic_sentiment,
+                'metadata': {
+                    'posts_analyzed': total_posts_analyzed,
+                    'subreddits_used': successful_subreddits,
+                    'total_weight': sum(info['weight'] for info in subreddit_weights)
+                }
+            }
             
             # Cache the result
             self.cache[cache_key] = {
@@ -190,7 +232,7 @@ class SentimentService:
         # Return average sentiment
         return sum(sentiments) / len(sentiments) if sentiments else 0.0
     
-    def get_mock_reddit_sentiment(self, choice1: str, choice2: str) -> Dict[str, float]:
+    def get_mock_reddit_sentiment(self, choice1: str, choice2: str) -> Dict:
         """Return mock Reddit sentiment data when API is unavailable"""
         # Simple mock sentiment based on term length and common words
         def get_mock_score(term):
@@ -206,9 +248,46 @@ class SentimentService:
         
         print("Mock Reddit sentiment function called")
 
+        # Mock demographic breakdown
+        mock_demographic_breakdown = {
+            'conservative': {
+                choice1: get_mock_score(choice1) - 0.1,
+                choice2: get_mock_score(choice2) + 0.1,
+                'weight': 10
+            },
+            'center-right': {
+                choice1: get_mock_score(choice1) - 0.05,
+                choice2: get_mock_score(choice2) + 0.05,
+                'weight': 5
+            },
+            'center': {
+                choice1: get_mock_score(choice1),
+                choice2: get_mock_score(choice2),
+                'weight': 30
+            },
+            'center-left': {
+                choice1: get_mock_score(choice1) + 0.05,
+                choice2: get_mock_score(choice2) - 0.05,
+                'weight': 35
+            },
+            'liberal': {
+                choice1: get_mock_score(choice1) + 0.1,
+                choice2: get_mock_score(choice2) - 0.1,
+                'weight': 10
+            }
+        }
+
         return {
-            choice1: get_mock_score(choice1),
-            choice2: get_mock_score(choice2)
+            'sentiment_scores': {
+                choice1: get_mock_score(choice1),
+                choice2: get_mock_score(choice2)
+            },
+            'demographic_breakdown': mock_demographic_breakdown,
+            'metadata': {
+                'posts_analyzed': 50,
+                'subreddits_used': ['news', 'AskReddit', 'politics'],
+                'total_weight': 90
+            }
         }
     
     def get_news_sentiment(self, choice1: str, choice2: str) -> Dict[str, float]:
@@ -264,7 +343,7 @@ class SentimentService:
             # )
             
             # Use reddit sentiment as the main sentiment scores for now
-            sentiment_scores = reddit_sentiment
+            sentiment_scores = reddit_sentiment.get('sentiment_scores', {choice1: 0.0, choice2: 0.0})
             
             # Create result structure
             result = {
@@ -273,11 +352,13 @@ class SentimentService:
                     "reddit": reddit_sentiment,
                     # "news": news_sentiment
                 },
+                "demographic_breakdown": reddit_sentiment.get('demographic_breakdown', {}),
                 "metadata": {
                     "choice1": choice1,
                     "choice2": choice2,
                     "timestamp": time.time(),
-                    "sources": ["reddit"]
+                    "sources": ["reddit"],
+                    "reddit_metadata": reddit_sentiment.get('metadata', {})
                 }
             }
             
@@ -293,9 +374,14 @@ class SentimentService:
             return {
                 "sentiment_scores": {choice1: 0.0, choice2: 0.0},
                 "source_breakdown": {
-                    "reddit": {choice1: 0.0, choice2: 0.0},
+                    "reddit": {
+                        'sentiment_scores': {choice1: 0.0, choice2: 0.0},
+                        'demographic_breakdown': {},
+                        'metadata': {}
+                    },
                     "news": {choice1: 0.0, choice2: 0.0}
                 },
+                "demographic_breakdown": {},
                 "metadata": {
                     "choice1": choice1,
                     "choice2": choice2,
@@ -339,6 +425,18 @@ class SentimentService:
             else:
                 return "very_negative"
         
+        # Process demographic breakdown for summary
+        demographic_summary = {}
+        demographic_breakdown = sentiment_data.get("demographic_breakdown", {})
+        for leaning, data in demographic_breakdown.items():
+            if isinstance(data, dict) and choice1 in data and choice2 in data:
+                demographic_summary[leaning] = {
+                    "winner": choice1 if data[choice1] > data[choice2] else choice2,
+                    "margin": abs(data[choice1] - data[choice2]),
+                    "scores": {choice1: data[choice1], choice2: data[choice2]},
+                    "weight": data.get('weight', 0)
+                }
+        
         return {
             "winner": winner,
             "margin": margin,
@@ -351,6 +449,7 @@ class SentimentService:
                 "category": categorize_sentiment(scores[choice2])
             },
             "overall_sentiment": "positive" if scores[choice1] + scores[choice2] > 0 else "negative",
+            "demographic_summary": demographic_summary,
             "sentiment_data": sentiment_data
         }
 

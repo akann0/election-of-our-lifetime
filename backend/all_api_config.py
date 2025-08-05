@@ -18,6 +18,8 @@ REDDIT_CONFIG = {
     "user_agent": "ElectionSentimentBot/1.0"
 }
 
+NEWS_API_KEY = "ba34d11981224ff4955650ff8934a944"  # Replace with your actual News API key
+
 # Alternative: Use environment variables
 import os
 
@@ -28,3 +30,7 @@ def get_reddit_credentials():
         "client_secret": os.getenv("REDDIT_CLIENT_SECRET", REDDIT_CONFIG["client_secret"]),
         "user_agent": REDDIT_CONFIG["user_agent"]
     } 
+
+def get_news_api_key():
+    """Get News API key from environment variable or config"""
+    return os.getenv("NEWS_API_KEY", NEWS_API_KEY)

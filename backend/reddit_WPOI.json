@@ -3,57 +3,90 @@
         {
             "subreddit": "r/news",
             "skew": "General news, slightly left",
-            "weight": 15
+            "weight": 15,
+            "demographics": {
+                "political_leaning": "center-left"
+            }
         },
         {
             "subreddit": "r/AskReddit",
             "skew": "Broad participation",
-            "weight": 15
+            "weight": 15,
+            "demographics": {
+                "political_leaning": "center"
+            }
         },
         {
             "subreddit": "r/politics",
             "skew": "Progressive political voice",
-            "weight": 10
+            "weight": 10,
+            "demographics": {
+                "political_leaning": "liberal"
+            }
         },
         {
             "subreddit": "r/Conservative",
             "skew": "Conservative political voice",
-            "weight": 10
+            "weight": 10,
+            "demographics": {
+                "political_leaning": "conservative"
+            }
         },
         {
             "subreddit": "r/television",
             "skew": "Pop culture",
-            "weight": 8
+            "weight": 8,
+            "demographics": {
+                "political_leaning": "center-left"
+            }
         },
         {
             "subreddit": "r/movies",
             "skew": "Pop culture",
-            "weight": 7
+            "weight": 7,
+            "demographics": {
+                "political_leaning": "center-left"
+            }
         },
         {
             "subreddit": "r/technology",
             "skew": "Tech/culture",
-            "weight": 8
+            "weight": 8,
+            "demographics": {
+                "political_leaning": "center-left"
+            }
         },
         {
             "subreddit": "r/UnitedStates",
             "skew": "Geographic focus",
-            "weight": 7
+            "weight": 7,
+            "demographics": {
+                "political_leaning": "center"
+            }
         },
         {
             "subreddit": "r/OutOfTheLoop",
             "skew": "Internet trending topics",
-            "weight": 10
+            "weight": 10,
+            "demographics": {
+                "political_leaning": "center"
+            }
         },
         {
             "subreddit": "r/technology",
             "skew": "Tech/culture",
-            "weight": 5
+            "weight": 5,
+            "demographics": {
+                "political_leaning": "center-left"
+            }
         },
         {
             "subreddit": "r/changeMyView",
             "skew": "Moral norms/values",
-            "weight": 7
+            "weight": 7,
+            "demographics": {
+                "political_leaning": "center"
+            }
         }
     ]
 }

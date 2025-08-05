@@ -178,6 +178,8 @@ def get_sentiment_analysis(choice1, choice2):
         return jsonify({
             "sentiment_data": sentiment_summary["sentiment_data"],
             "sentiment_summary": sentiment_summary,
+            "demographic_breakdown": sentiment_summary["sentiment_data"].get("demographic_breakdown", {}),
+            "demographic_summary": sentiment_summary.get("demographic_summary", {}),
             "timestamp": datetime.now().isoformat(),
             "message": f"Sentiment analysis: {choice1} vs {choice2}"
         })
@@ -202,6 +204,8 @@ def get_combined_analysis(choice1, choice2):
             "search_data": search_results,
             "sentiment_data": sentiment_results,
             "sentiment_summary": sentiment_summary,
+            "demographic_breakdown": sentiment_results.get("demographic_breakdown", {}),
+            "demographic_summary": sentiment_summary.get("demographic_summary", {}),
             "metadata": {
                 "choice1": choice1,
                 "choice2": choice2,

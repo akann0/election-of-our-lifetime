@@ -17,11 +17,31 @@ const ElectoralCollege = new Map([
   ['DC', 3]
 ]);
 
+// Helper to convert -1 to 1 sentiment to 0-100% (50% = neutral)
+function sentimentToPercent(score) {
+  return (score + 1) * 50;
+}
+
+const loadingMessages = [
+  'Counting ballots in swing states...',
+  'Choosing a vice president...',
+  'Doing debate prep...',
+  'Shaking hands with voters...',
+  'Polling the Electoral College...',
+  'Running negative ads...',
+  'Consulting the pundits...',
+  'Making last-minute campaign stops...',
+  'Checking the exit polls...',
+  'Calling the networks...'
+];
+
 const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoading }) => {
   const [scoreboard, setScoreboard] = useState([0, 0]); // [Red, Blue]
   const [stateColors, setStateColors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [currentComparison, setCurrentComparison] = useState('');
+  const [demographicBreakdown, setDemographicBreakdown] = useState({});
+  const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const svgRef = useRef(null);
 
   // Function to update state colors - this will be used for electoral coloring
@@ -85,6 +105,19 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
     }
   }, [choice1, choice2]);
 
+  const isCurrentlyLoading = isLoading || parentIsLoading;
+
+  // Rotate loading messages while loading
+  useEffect(() => {
+    if (isCurrentlyLoading) {
+      setLoadingMsgIdx(0);
+      const interval = setInterval(() => {
+        setLoadingMsgIdx(idx => (idx + 1) % loadingMessages.length);
+      }, 1200);
+      return () => clearInterval(interval);
+    }
+  }, [isCurrentlyLoading]);
+
   const handleStateClick = (stateId) => {
     // Cycle through colors: gray -> red -> blue -> gray
     console.log(`State clicked: ${stateId}`);
@@ -109,6 +142,7 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       const comparisonResults = await ElectionService.compareChoices(choice1, choice2);
       console.log('Received comparison results:', comparisonResults);
       setStateColors(comparisonResults.state_colors);
+      setDemographicBreakdown(comparisonResults.demographic_breakdown || {});
       
       // You can also access the detailed analysis data if needed:
       // console.log('Trends data:', comparisonResults.trends_data);
@@ -140,7 +174,14 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
     }
   };
 
-  const isCurrentlyLoading = isLoading || parentIsLoading;
+  // Order demographics: conservative, center-right, center, center-left, liberal
+  const demographicOrder = [
+    'conservative',
+    'center-right',
+    'center',
+    'center-left',
+    'liberal'
+  ];
 
   return (
     <div className="us-map-container">
@@ -202,9 +243,27 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       </div>
       
       {isCurrentlyLoading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner"></div>
-          <p>Loading comparison data...</p>
+        <div className="loading-overlay" style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(30, 30, 50, 0.98)',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          fontSize: '1.3em',
+          fontWeight: 'bold',
+          letterSpacing: '0.01em',
+          textShadow: '0 2px 8px #000',
+        }}>
+          <div className="loading-spinner" style={{ marginBottom: 24 }}></div>
+          <p style={{ marginBottom: 8 }}>Election in progress...</p>
+          <p style={{ fontSize: '1.1em', fontWeight: 400, fontStyle: 'italic' }}>{loadingMessages[loadingMsgIdx]}</p>
         </div>
       )}
       
@@ -220,6 +279,38 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
           }}
         />
       </div>
+      {/* Demographic Breakdown Bar Chart */}
+      {demographicBreakdown && Object.keys(demographicBreakdown).length > 0 && (
+        <div className="demographic-breakdown">
+          <h3>Demographic Sentiment Breakdown</h3>
+          <div className="demographic-bars">
+            {demographicOrder
+              .filter(demo => demographicBreakdown[demo])
+              .map((demo) => {
+                const scores = demographicBreakdown[demo];
+                // Convert -1..1 to 0..1 for both, then normalize so they sum to 1
+                let raw1 = typeof scores[choice1] === 'number' ? (scores[choice1] + 1) / 2 : 0.5;
+                let raw2 = typeof scores[choice2] === 'number' ? (scores[choice2] + 1) / 2 : 0.5;
+                const total = raw1 + raw2;
+                const percent1 = total > 0 ? (raw1 / total) * 100 : 50;
+                const percent2 = total > 0 ? (raw2 / total) * 100 : 50;
+                return (
+                  <div className="demographic-bar-row" key={demo}>
+                    <div className="demographic-label">{demo.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                    <div className="demographic-bar-container" style={{ display: 'flex', width: '100%', height: '24px', background: '#eee', borderRadius: '6px', overflow: 'hidden', margin: '6px 0' }}>
+                      <div className="demographic-bar red" style={{ width: `${percent1}%`, background: '#F44336', color: percent1 > 15 ? '#fff' : '#000', display: 'flex', alignItems: 'center', justifyContent: percent1 > 15 ? 'center' : 'flex-start', fontWeight: 'bold', fontSize: '0.95em' }}>
+                        {percent1 >= 10 ? `${percent1.toFixed(1)}%` : ''}
+                      </div>
+                      <div className="demographic-bar blue" style={{ width: `${percent2}%`, background: '#2196F3', color: percent2 > 15 ? '#fff' : '#000', display: 'flex', alignItems: 'center', justifyContent: percent2 > 15 ? 'center' : 'flex-end', fontWeight: 'bold', fontSize: '0.95em' }}>
+                        {percent2 >= 10 ? `${percent2.toFixed(1)}%` : ''}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

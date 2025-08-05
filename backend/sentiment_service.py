@@ -33,6 +33,14 @@ class SentimentService:
             print(f"Reddit API not available: {e}")
             print("Will use mock Reddit data instead")
         
+        # Load state demographic leans
+        try:
+            with open('state_demographics.json', 'r', encoding='utf-8') as f:
+                self.state_demographics = json.load(f)
+        except Exception as e:
+            print(f"Error loading state_demographics.json: {e}")
+            self.state_demographics = {}
+    
     def load_sentiment_cache(self) -> Dict:
         """Load sentiment cache from disk"""
         try:
@@ -340,7 +348,7 @@ class SentimentService:
             #     reddit_sentiment, news_sentiment
             # )
             
-            # Use reddit sentiment as the main sentiment scores for now
+            # Do NOT apply state demographic bias here. Just return the overall and demographic breakdown.
             sentiment_scores = reddit_sentiment.get('sentiment_scores', {choice1: 0.0, choice2: 0.0})
             
             # Create result structure

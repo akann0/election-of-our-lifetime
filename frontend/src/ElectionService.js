@@ -24,61 +24,23 @@ class ElectionService {
   async compareChoices(choice1, choice2) {
     try {
       console.log(`Comparing ${choice1} vs ${choice2} with combined analysis...`);
-      
-      // Get both Google Trends and sentiment analysis
-      const [trendsResponse, sentimentResponse] = await Promise.all([
-        fetch(`${this.baseUrl}/google-trends/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`),
-        fetch(`${this.baseUrl}/sentiment/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`)
-      ]);
-
-      if (!trendsResponse.ok) {
-        throw new Error(`Google Trends HTTP error! status: ${trendsResponse.status}`);
+      const response = await fetch(`${this.baseUrl}/combined-analysis/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`);
+      if (!response.ok) {
+        throw new Error(`Combined analysis HTTP error! status: ${response.status}`);
       }
-      if (!sentimentResponse.ok) {
-        throw new Error(`Sentiment HTTP error! status: ${sentimentResponse.status}`);
-      }
-
-      const trendsData = await trendsResponse.json();
-      const sentimentData = await sentimentResponse.json();
-
-      console.log('Trends data:', trendsData);
-      console.log('Sentiment data:', sentimentData);
-
-      // Combine the data into weighted state colors
-      const combinedColors = this.combineTrendsAndSentiment(
-        trendsData.state_colors,
-        sentimentData.sentiment_summary,
-        choice1,
-        choice2
-      );
-
-      return {
-        state_colors: combinedColors,
-        trends_data: trendsData,
-        sentiment_data: sentimentData,
-        analysis_summary: {
-          choice1: {
-            trends_score: trendsData.choice1_score || 0,
-            sentiment_score: sentimentData.sentiment_summary?.choice1_sentiment?.score || 0
-          },
-          choice2: {
-            trends_score: trendsData.choice2_score || 0,
-            sentiment_score: sentimentData.sentiment_summary?.choice2_sentiment?.score || 0
-          }
-        }
-      };
-
+      const combinedResults = await response.json();
+      return combinedResults;
     } catch (error) {
       console.error('Error in combined analysis:', error);
       // Return mock comparison data for development
       return {
         state_colors: this.getMockComparisonData(choice1, choice2),
-        trends_data: { choice1_score: 0, choice2_score: 0 },
-        sentiment_data: { sentiment_summary: { choice1_sentiment: { score: 0 }, choice2_sentiment: { score: 0 } } },
-        analysis_summary: {
-          choice1: { trends_score: 0, sentiment_score: 0 },
-          choice2: { trends_score: 0, sentiment_score: 0 }
-        }
+        state_winners: {},
+        electoral_tally: {},
+        search_data: {},
+        sentiment_summary: {},
+        demographic_breakdown: {},
+        metadata: {}
       };
     }
   }

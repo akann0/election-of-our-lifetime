@@ -91,12 +91,39 @@ def get_election_results():
 
 @app.route('/state/<state_code>')
 def get_state_results(state_code):
-    """Get results for a specific state"""
+    """Get results for a specific state, including demographic-biased sentiment and lean"""
     state_code = state_code.upper()
     if state_code in ELECTION_DATA["states"]:
+        # Get the state's demographic lean
+        with open('state_demographics.json', 'r', encoding='utf-8') as f:
+            state_demographics = json.load(f)
+        lean = state_demographics.get(state_code, 'center')
+        # Get sentiment summary (no bias applied yet)
+        sentiment_summary = sentiment_service.get_sentiment_summary(
+            ELECTION_DATA["states"][state_code].get("choice1", ""),
+            ELECTION_DATA["states"][state_code].get("choice2", "")
+        )
+        # Apply bias to the sentiment score using the demographic breakdown
+        demo_breakdown = sentiment_summary["sentiment_data"].get("demographic_breakdown", {})
+        # Use the state's lean to bias the score
+        demo_scores = demo_breakdown.get(lean, {})
+        # If we have a demographic score for the lean, use it; otherwise, use the overall
+        if demo_scores and all(k in demo_scores for k in [ELECTION_DATA["states"][state_code].get("choice1", ""), ELECTION_DATA["states"][state_code].get("choice2", "")]):
+            state_sentiment = {
+                "score": demo_scores,
+                "source": f"biased toward {lean}"
+            }
+        else:
+            state_sentiment = {
+                "score": sentiment_summary["sentiment_data"].get("sentiment_scores", {}),
+                "source": "overall"
+            }
         return jsonify({
             "state": state_code,
-            "data": ELECTION_DATA["states"][state_code]
+            "data": ELECTION_DATA["states"][state_code],
+            "sentiment_summary": sentiment_summary,
+            "demographic_lean": lean,
+            "state_sentiment": state_sentiment
         })
     else:
         return jsonify({"error": "State not found"}), 404
@@ -188,24 +215,93 @@ def get_sentiment_analysis(choice1, choice2):
         print(f"Error in sentiment analysis endpoint: {e}")
         return jsonify({"error": str(e)}), 500
 
+def calculate_state_vote_split(recognition_1, favorability_1, recognition_2, favorability_2):
+    """
+    Returns (vote_share_1, vote_share_2) as percentages (0-100),
+    using 80% favorability and 20% recognition.
+    """
+    # Normalize recognition and favorability to 0-1
+    def norm(x):
+        # If already 0-1, leave as is; if -1 to 1, map to 0-1
+        if x < 0 or x > 1:
+            return (x + 1) / 2
+        return x
+    rec1 = norm(recognition_1)
+    rec2 = norm(recognition_2)
+    fav1 = norm(favorability_1)
+    fav2 = norm(favorability_2)
+    # Weighted sum
+    score1 = 0.2 * rec1 + 0.8 * fav1
+    score2 = 0.2 * rec2 + 0.8 * fav2
+    # Avoid both zero
+    if score1 == 0 and score2 == 0:
+        return (50.0, 50.0)
+    # Normalize to sum to 100
+    total = score1 + score2
+    pct1 = (score1 / total) * 100
+    pct2 = (score2 / total) * 100
+    return (pct1, pct2)
+
 @app.route('/combined-analysis/<choice1>/<choice2>')
 def get_combined_analysis(choice1, choice2):
-    """Get both search volume and sentiment analysis"""
+    """Get both search volume and sentiment analysis, then for each state, calculate the winner using both sources and demographic bias."""
     try:
-        # Get search volume data
+        # Get Google Trends data (state-by-state recognition)
         search_results = compare_google_trends(choice1, choice2)
-        
-        # Get sentiment data
-        sentiment_results = sentiment_service.analyze_sentiment(choice1, choice2)
+        state_scores = search_results.get('state_scores', {})
+        # Get sentiment analysis ONCE (overall and by demographic)
         sentiment_summary = sentiment_service.get_sentiment_summary(choice1, choice2)
-        
-        # Combine results (for now, just return both separately)
+        demo_breakdown = sentiment_summary["sentiment_data"].get("demographic_breakdown", {})
+        # Load state demographic leans
+        with open('state_demographics.json', 'r', encoding='utf-8') as f:
+            state_demographics = json.load(f)
+        # Decide winner for each state using both trends and sentiment (with demographic bias)
+        colors = choose_colors(choice1, choice2)
+        state_colors = {}
+        state_winners = {}
+        state_vote_splits = {}
+        for state, score_data in state_scores.items():
+            lean = state_demographics.get(state, 'center')
+            demo_scores = demo_breakdown.get(lean, {})
+            # Recognition: Google Trends score, normalized 0-1
+            rec1 = score_data.get(choice1, 0)
+            rec2 = score_data.get(choice2, 0)
+            max_rec = max(rec1, rec2, 1)
+            rec1_norm = rec1 / max_rec
+            rec2_norm = rec2 / max_rec
+            # Favorability: sentiment, -1 to 1
+            fav1 = demo_scores.get(choice1, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice1, 0.0))
+            fav2 = demo_scores.get(choice2, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice2, 0.0))
+            # Calculate vote split
+            pct1, pct2 = calculate_state_vote_split(rec1_norm, fav1, rec2_norm, fav2)
+            state_vote_splits[state] = {choice1: pct1, choice2: pct2}
+            # Winner and color
+            if pct1 > pct2:
+                winner = choice1
+                state_colors[state] = colors[0]
+            elif pct2 > pct1:
+                winner = choice2
+                state_colors[state] = colors[1]
+            else:
+                winner = None
+                state_colors[state] = '#e0e0e0'
+            state_winners[state] = winner
+        # Tally electoral votes
+        electoral_tally = {choice1: 0, choice2: 0}
+        for state, winner in state_winners.items():
+            if winner:
+                votes = search_results.get('electoral_college', {}).get(state) or search_results.get('ELECTORAL_COLLEGE', {}).get(state)
+                if not votes:
+                    votes = 0
+                electoral_tally[winner] += votes
         combined_results = {
+            "state_colors": state_colors,
+            "state_winners": state_winners,
+            "state_vote_splits": state_vote_splits,
+            "electoral_tally": electoral_tally,
             "search_data": search_results,
-            "sentiment_data": sentiment_results,
             "sentiment_summary": sentiment_summary,
-            "demographic_breakdown": sentiment_results.get("demographic_breakdown", {}),
-            "demographic_summary": sentiment_summary.get("demographic_summary", {}),
+            "demographic_breakdown": demo_breakdown,
             "metadata": {
                 "choice1": choice1,
                 "choice2": choice2,
@@ -213,9 +309,7 @@ def get_combined_analysis(choice1, choice2):
                 "analysis_type": "combined"
             }
         }
-        
         return jsonify(combined_results)
-        
     except Exception as e:
         print(f"Error in combined analysis endpoint: {e}")
         return jsonify({"error": str(e)}), 500

@@ -10,8 +10,8 @@
   "reddit_CNN_Fox News": {
     "sentiment": {
       "sentiment_scores": {
-        "CNN": -0.10249999999999997,
-        "Fox News": -0.082471875
+        "CNN": -0.09685714285714285,
+        "Fox News": -0.10951428571428572
       },
       "demographic_breakdown": {
         "conservative": {
@@ -20,19 +20,19 @@
           "weight": 4
         },
         "center-right": {
-          "CNN": 0.0,
-          "Fox News": 0.0,
-          "weight": 0
+          "CNN": -0.036475,
+          "Fox News": -0.183775,
+          "weight": 4
         },
         "center": {
-          "CNN": -0.2235261904761905,
-          "Fox News": -0.11091130952380952,
-          "weight": 14
+          "CNN": -0.2315,
+          "Fox News": -0.1294875,
+          "weight": 13
         },
         "center-left": {
-          "CNN": 0.04712000000000001,
+          "CNN": 0.05188666666666667,
           "Fox News": -0.19761333333333334,
-          "weight": 18
+          "weight": 17
         },
         "liberal": {
           "CNN": -0.233325,
@@ -41,7 +41,7 @@
         }
       },
       "metadata": {
-        "posts_analyzed": 72,
+        "posts_analyzed": 77,
         "subreddits_used": [
           "news",
           "AskReddit",
@@ -53,13 +53,14 @@
           "UnitedStates",
           "OutOfTheLoop",
           "technology",
-          "changeMyView"
+          "changeMyView",
+          "wallstreetbets"
         ],
-        "total_weight": 102
+        "total_weight": 112
       }
     },
-    "timestamp": 1754384632.8210664,
-    "posts_analyzed": 72,
+    "timestamp": 1754407760.1249802,
+    "posts_analyzed": 77,
     "subreddits_used": [
       "news",
       "AskReddit",
@@ -71,7 +72,8 @@
       "UnitedStates",
       "OutOfTheLoop",
       "technology",
-      "changeMyView"
+      "changeMyView",
+      "wallstreetbets"
     ]
   },
   "reddit_Yankees_Dodgers": {
@@ -499,6 +501,1092 @@
       "sources": [
         "reddit"
       ]
+    }
+  },
+  "reddit_toe_thumb": {
+    "sentiment": {
+      "sentiment_scores": {
+        "toe": -0.026404761904761903,
+        "thumb": 0.11031578947368421
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "toe": -0.4588,
+          "thumb": 0.036325000000000024,
+          "weight": 4
+        },
+        "center-right": {
+          "toe": 0.2743,
+          "thumb": 0.39759999999999995,
+          "weight": 4
+        },
+        "center": {
+          "toe": 0.007316666666666656,
+          "thumb": 0.10250416666666669,
+          "weight": 13
+        },
+        "center-left": {
+          "toe": -0.11656666666666667,
+          "thumb": 0.02131333333333334,
+          "weight": 17
+        },
+        "liberal": {
+          "toe": 7.500000000000562e-05,
+          "thumb": 0.13822500000000001,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 80,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    },
+    "timestamp": 1754407809.8821342,
+    "posts_analyzed": 80,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "toe|||thumb": {
+    "sentiment_scores": {
+      "toe": -0.026404761904761903,
+      "thumb": 0.11031578947368421
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "toe": -0.026404761904761903,
+          "thumb": 0.11031578947368421
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "toe": -0.4588,
+            "thumb": 0.036325000000000024,
+            "weight": 4
+          },
+          "center-right": {
+            "toe": 0.2743,
+            "thumb": 0.39759999999999995,
+            "weight": 4
+          },
+          "center": {
+            "toe": 0.007316666666666656,
+            "thumb": 0.10250416666666669,
+            "weight": 13
+          },
+          "center-left": {
+            "toe": -0.11656666666666667,
+            "thumb": 0.02131333333333334,
+            "weight": 17
+          },
+          "liberal": {
+            "toe": 7.500000000000562e-05,
+            "thumb": 0.13822500000000001,
+            "weight": 4
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 80,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "technology",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 112
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "toe": -0.4588,
+        "thumb": 0.036325000000000024,
+        "weight": 4
+      },
+      "center-right": {
+        "toe": 0.2743,
+        "thumb": 0.39759999999999995,
+        "weight": 4
+      },
+      "center": {
+        "toe": 0.007316666666666656,
+        "thumb": 0.10250416666666669,
+        "weight": 13
+      },
+      "center-left": {
+        "toe": -0.11656666666666667,
+        "thumb": 0.02131333333333334,
+        "weight": 17
+      },
+      "liberal": {
+        "toe": 7.500000000000562e-05,
+        "thumb": 0.13822500000000001,
+        "weight": 4
+      }
+    },
+    "metadata": {
+      "choice1": "toe",
+      "choice2": "thumb",
+      "timestamp": 1754407809.893138,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 80,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    }
+  },
+  "reddit_ring finger_middle finger": {
+    "sentiment": {
+      "sentiment_scores": {
+        "ring finger": 0.017826666666666668,
+        "middle finger": -0.007417241379310341
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "ring finger": 0.0,
+          "middle finger": 0.09415,
+          "weight": 0
+        },
+        "center-right": {
+          "ring finger": 0.28405,
+          "middle finger": 0.10115,
+          "weight": 2
+        },
+        "center": {
+          "ring finger": -0.2632916666666667,
+          "middle finger": -0.16372499999999998,
+          "weight": 7
+        },
+        "center-left": {
+          "ring finger": -0.13291666666666666,
+          "middle finger": -0.07953999999999997,
+          "weight": 4
+        },
+        "liberal": {
+          "ring finger": 0.39225,
+          "middle finger": 0.170825,
+          "weight": 2
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 44,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    },
+    "timestamp": 1754408619.6246338,
+    "posts_analyzed": 44,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "ring finger|||middle finger": {
+    "sentiment_scores": {
+      "ring finger": 0.017826666666666668,
+      "middle finger": -0.007417241379310341
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "ring finger": 0.017826666666666668,
+          "middle finger": -0.007417241379310341
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "ring finger": 0.0,
+            "middle finger": 0.09415,
+            "weight": 0
+          },
+          "center-right": {
+            "ring finger": 0.28405,
+            "middle finger": 0.10115,
+            "weight": 2
+          },
+          "center": {
+            "ring finger": -0.2632916666666667,
+            "middle finger": -0.16372499999999998,
+            "weight": 7
+          },
+          "center-left": {
+            "ring finger": -0.13291666666666666,
+            "middle finger": -0.07953999999999997,
+            "weight": 4
+          },
+          "liberal": {
+            "ring finger": 0.39225,
+            "middle finger": 0.170825,
+            "weight": 2
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 44,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "technology",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 112
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "ring finger": 0.0,
+        "middle finger": 0.09415,
+        "weight": 0
+      },
+      "center-right": {
+        "ring finger": 0.28405,
+        "middle finger": 0.10115,
+        "weight": 2
+      },
+      "center": {
+        "ring finger": -0.2632916666666667,
+        "middle finger": -0.16372499999999998,
+        "weight": 7
+      },
+      "center-left": {
+        "ring finger": -0.13291666666666666,
+        "middle finger": -0.07953999999999997,
+        "weight": 4
+      },
+      "liberal": {
+        "ring finger": 0.39225,
+        "middle finger": 0.170825,
+        "weight": 2
+      }
+    },
+    "metadata": {
+      "choice1": "ring finger",
+      "choice2": "middle finger",
+      "timestamp": 1754408619.634594,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 44,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    }
+  },
+  "reddit_pizza_pasta": {
+    "sentiment": {
+      "sentiment_scores": {
+        "pizza": -0.08445238095238093,
+        "pasta": 0.0015542857142857207
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "pizza": 0.056900000000000034,
+          "pasta": 0.110575,
+          "weight": 4
+        },
+        "center-right": {
+          "pizza": -0.025675,
+          "pasta": 0.25595,
+          "weight": 4
+        },
+        "center": {
+          "pizza": 0.043775,
+          "pasta": 0.15303333333333333,
+          "weight": 13
+        },
+        "center-left": {
+          "pizza": -0.1832466666666667,
+          "pasta": -0.19110333333333332,
+          "weight": 17
+        },
+        "liberal": {
+          "pizza": 0.07910000000000002,
+          "pasta": -0.2219,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 77,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    },
+    "timestamp": 1754408846.2759478,
+    "posts_analyzed": 77,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "pizza|||pasta": {
+    "sentiment_scores": {
+      "pizza": -0.08445238095238093,
+      "pasta": 0.0015542857142857207
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "pizza": -0.08445238095238093,
+          "pasta": 0.0015542857142857207
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "pizza": 0.056900000000000034,
+            "pasta": 0.110575,
+            "weight": 4
+          },
+          "center-right": {
+            "pizza": -0.025675,
+            "pasta": 0.25595,
+            "weight": 4
+          },
+          "center": {
+            "pizza": 0.043775,
+            "pasta": 0.15303333333333333,
+            "weight": 13
+          },
+          "center-left": {
+            "pizza": -0.1832466666666667,
+            "pasta": -0.19110333333333332,
+            "weight": 17
+          },
+          "liberal": {
+            "pizza": 0.07910000000000002,
+            "pasta": -0.2219,
+            "weight": 4
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 77,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "technology",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 112
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "pizza": 0.056900000000000034,
+        "pasta": 0.110575,
+        "weight": 4
+      },
+      "center-right": {
+        "pizza": -0.025675,
+        "pasta": 0.25595,
+        "weight": 4
+      },
+      "center": {
+        "pizza": 0.043775,
+        "pasta": 0.15303333333333333,
+        "weight": 13
+      },
+      "center-left": {
+        "pizza": -0.1832466666666667,
+        "pasta": -0.19110333333333332,
+        "weight": 17
+      },
+      "liberal": {
+        "pizza": 0.07910000000000002,
+        "pasta": -0.2219,
+        "weight": 4
+      }
+    },
+    "metadata": {
+      "choice1": "pizza",
+      "choice2": "pasta",
+      "timestamp": 1754408846.2859461,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 77,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    }
+  },
+  "reddit_avocado_steak": {
+    "sentiment": {
+      "sentiment_scores": {
+        "avocado": -0.04791212121212122,
+        "steak": -0.10747142857142856
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "avocado": -0.031900000000000005,
+          "steak": 0.302125,
+          "weight": 4
+        },
+        "center-right": {
+          "avocado": 0.26335,
+          "steak": -0.1725,
+          "weight": 2
+        },
+        "center": {
+          "avocado": -0.0015111111111111113,
+          "steak": -0.2444611111111111,
+          "weight": 10
+        },
+        "center-left": {
+          "avocado": -0.10053000000000001,
+          "steak": 0.011813333333333325,
+          "weight": 13
+        },
+        "liberal": {
+          "avocado": -0.03315,
+          "steak": -0.08469999999999998,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 75,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    },
+    "timestamp": 1754409014.225766,
+    "posts_analyzed": 75,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "avocado|||steak": {
+    "sentiment_scores": {
+      "avocado": -0.04791212121212122,
+      "steak": -0.10747142857142856
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "avocado": -0.04791212121212122,
+          "steak": -0.10747142857142856
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "avocado": -0.031900000000000005,
+            "steak": 0.302125,
+            "weight": 4
+          },
+          "center-right": {
+            "avocado": 0.26335,
+            "steak": -0.1725,
+            "weight": 2
+          },
+          "center": {
+            "avocado": -0.0015111111111111113,
+            "steak": -0.2444611111111111,
+            "weight": 10
+          },
+          "center-left": {
+            "avocado": -0.10053000000000001,
+            "steak": 0.011813333333333325,
+            "weight": 13
+          },
+          "liberal": {
+            "avocado": -0.03315,
+            "steak": -0.08469999999999998,
+            "weight": 4
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 75,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "technology",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 112
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "avocado": -0.031900000000000005,
+        "steak": 0.302125,
+        "weight": 4
+      },
+      "center-right": {
+        "avocado": 0.26335,
+        "steak": -0.1725,
+        "weight": 2
+      },
+      "center": {
+        "avocado": -0.0015111111111111113,
+        "steak": -0.2444611111111111,
+        "weight": 10
+      },
+      "center-left": {
+        "avocado": -0.10053000000000001,
+        "steak": 0.011813333333333325,
+        "weight": 13
+      },
+      "liberal": {
+        "avocado": -0.03315,
+        "steak": -0.08469999999999998,
+        "weight": 4
+      }
+    },
+    "metadata": {
+      "choice1": "avocado",
+      "choice2": "steak",
+      "timestamp": 1754409014.2357643,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 75,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    }
+  },
+  "reddit_mom_dad": {
+    "sentiment": {
+      "sentiment_scores": {
+        "mom": -0.1772928571428572,
+        "dad": -0.07685000000000002
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "mom": -0.16215,
+          "dad": 0.03539999999999999,
+          "weight": 4
+        },
+        "center-right": {
+          "mom": 0.018175000000000024,
+          "dad": -0.29745,
+          "weight": 4
+        },
+        "center": {
+          "mom": -0.11726666666666667,
+          "dad": 0.031705555555555535,
+          "weight": 13
+        },
+        "center-left": {
+          "mom": -0.09975666666666667,
+          "dad": -0.23510999999999999,
+          "weight": 17
+        },
+        "liberal": {
+          "mom": -0.581875,
+          "dad": 0.04844999999999999,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 84,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    },
+    "timestamp": 1754410406.5586894,
+    "posts_analyzed": 84,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "mom|||dad": {
+    "sentiment_scores": {
+      "mom": -0.1772928571428572,
+      "dad": -0.07685000000000002
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "mom": -0.1772928571428572,
+          "dad": -0.07685000000000002
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "mom": -0.16215,
+            "dad": 0.03539999999999999,
+            "weight": 4
+          },
+          "center-right": {
+            "mom": 0.018175000000000024,
+            "dad": -0.29745,
+            "weight": 4
+          },
+          "center": {
+            "mom": -0.11726666666666667,
+            "dad": 0.031705555555555535,
+            "weight": 13
+          },
+          "center-left": {
+            "mom": -0.09975666666666667,
+            "dad": -0.23510999999999999,
+            "weight": 17
+          },
+          "liberal": {
+            "mom": -0.581875,
+            "dad": 0.04844999999999999,
+            "weight": 4
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 84,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "technology",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 112
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "mom": -0.16215,
+        "dad": 0.03539999999999999,
+        "weight": 4
+      },
+      "center-right": {
+        "mom": 0.018175000000000024,
+        "dad": -0.29745,
+        "weight": 4
+      },
+      "center": {
+        "mom": -0.11726666666666667,
+        "dad": 0.031705555555555535,
+        "weight": 13
+      },
+      "center-left": {
+        "mom": -0.09975666666666667,
+        "dad": -0.23510999999999999,
+        "weight": 17
+      },
+      "liberal": {
+        "mom": -0.581875,
+        "dad": 0.04844999999999999,
+        "weight": 4
+      }
+    },
+    "metadata": {
+      "choice1": "mom",
+      "choice2": "dad",
+      "timestamp": 1754410406.5617118,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 84,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    }
+  },
+  "reddit_truck_train": {
+    "sentiment": {
+      "sentiment_scores": {
+        "truck": -0.12765909090909092,
+        "train": -0.15074761904761905
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "truck": -0.27225,
+          "train": -0.13635000000000003,
+          "weight": 4
+        },
+        "center-right": {
+          "truck": -0.20359999999999998,
+          "train": -0.07955,
+          "weight": 4
+        },
+        "center": {
+          "truck": -0.07003541666666667,
+          "train": 0.059925000000000006,
+          "weight": 15
+        },
+        "center-left": {
+          "truck": -0.09757,
+          "train": -0.2959366666666666,
+          "weight": 17
+        },
+        "liberal": {
+          "truck": -0.258925,
+          "train": -0.344125,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 86,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
+    },
+    "timestamp": 1754410496.1599984,
+    "posts_analyzed": 86,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "technology",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "truck|||train": {
+    "sentiment_scores": {
+      "truck": -0.12765909090909092,
+      "train": -0.15074761904761905
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "truck": -0.12765909090909092,
+          "train": -0.15074761904761905
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "truck": -0.27225,
+            "train": -0.13635000000000003,
+            "weight": 4
+          },
+          "center-right": {
+            "truck": -0.20359999999999998,
+            "train": -0.07955,
+            "weight": 4
+          },
+          "center": {
+            "truck": -0.07003541666666667,
+            "train": 0.059925000000000006,
+            "weight": 15
+          },
+          "center-left": {
+            "truck": -0.09757,
+            "train": -0.2959366666666666,
+            "weight": 17
+          },
+          "liberal": {
+            "truck": -0.258925,
+            "train": -0.344125,
+            "weight": 4
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 86,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "technology",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 112
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "truck": -0.27225,
+        "train": -0.13635000000000003,
+        "weight": 4
+      },
+      "center-right": {
+        "truck": -0.20359999999999998,
+        "train": -0.07955,
+        "weight": 4
+      },
+      "center": {
+        "truck": -0.07003541666666667,
+        "train": 0.059925000000000006,
+        "weight": 15
+      },
+      "center-left": {
+        "truck": -0.09757,
+        "train": -0.2959366666666666,
+        "weight": 17
+      },
+      "liberal": {
+        "truck": -0.258925,
+        "train": -0.344125,
+        "weight": 4
+      }
+    },
+    "metadata": {
+      "choice1": "truck",
+      "choice2": "train",
+      "timestamp": 1754410496.162997,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 86,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "technology",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 112
+      }
     }
   }
 }

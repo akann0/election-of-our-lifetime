@@ -87,6 +87,14 @@
             "demographics": {
                 "political_leaning": "center"
             }
+        },
+        {
+            "subreddit": "r/wallstreetbets",
+            "skew": "Finance, markets, irreverent, center-right/libertarian",
+            "weight": 10,
+            "demographics": {
+                "political_leaning": "center-right"
+            }
         }
     ]
 }

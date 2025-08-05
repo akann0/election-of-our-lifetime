@@ -4,9 +4,16 @@
   padding: 24px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.comparison-form-container.small {
+  margin: 0;
+  max-width: none;
+  width: 100%;
 }
 
 .comparison-form-container h2 {
@@ -29,10 +36,20 @@
   gap: 20px;
 }
 
+.comparison-form.horizontal-form {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
 .input-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .input-group label {

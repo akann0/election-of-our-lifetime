@@ -5,6 +5,97 @@ from datetime import datetime
 import os, time, random
 from get_election_results import compare_google_trends, load_cache, save_cache
 from sentiment_service import sentiment_service
+import numpy as np
+
+# Simulation defaults for calc_state_vote_split
+SIM_DEFAULT_N = 200_000
+SIM_DEFAULT_RHO = -0.9
+SIM_SPLIT_CACHE = {}
+
+def tprint(do_print=False, *args, **kwargs):
+    return
+    if do_print:
+        print(*args, **kwargs)
+
+def calculate_vote_shares(marg_A, marg_B):
+    """
+    Deterministic vote share calculation from category marginals based on the
+    Voting Logic Table. Returns (vote_A_pct, vote_B_pct, turnout_pct), where
+    percentages sum to <= 100 and turnout = vote_A_pct + vote_B_pct.
+
+    Accepts marginals as either arrays [fav, neu, unf, unk] or dicts with
+    keys 'favorable','neutral','unfavorable','unknown'.
+    """
+    def to_probs(m):
+        if isinstance(m, dict):
+            arr = np.array([
+                float(m.get('favorable', 0.0)),
+                float(m.get('neutral', 0.0)),
+                float(m.get('unfavorable', 0.0)),
+                float(m.get('unknown', 0.0)),
+            ], dtype=float)
+        else:
+            arr = np.array(m, dtype=float)
+        s = arr.sum()
+        if s <= 0:
+            return np.array([0.25, 0.25, 0.25, 0.25], dtype=float)
+        return arr / s
+
+    pA = to_probs(marg_A)  # [F, N, D, U]
+    pB = to_probs(marg_B)  # [F, N, D, U]
+
+    # Outcome weights per (i,j) where i in A categories, j in B categories.
+    # Categories: 0=F, 1=N, 2=D, 3=U
+    # Each entry is (wA, wB, wDNV)
+    w = np.zeros((4, 4, 3), dtype=float)
+
+    F, N, D, U = 0, 1, 2, 3
+
+    # Likes A vs ...
+    w[F, F] = (0.5, 0.5, 0.0)
+    w[F, D] = (1.0, 0.0, 0.0)
+    w[F, N] = (1.0, 0.0, 0.0)
+    w[F, U] = (1.0, 0.0, 0.0)
+
+    # Neutral A vs ...
+    w[N, F] = (0.0, 1.0, 0.0)
+    w[N, D] = (1.0, 0.0, 0.0)
+    w[N, N] = (1.0/3.0, 1.0/3.0, 1.0/3.0)
+    w[N, U] = (0.5, 0.0, 0.5)
+
+    # Dislikes A vs ...
+    w[D, F] = (0.0, 1.0, 0.0)
+    w[D, N] = (0.0, 1.0, 0.0)
+    w[D, U] = (0.0, 0.5, 0.5)
+    w[D, D] = (0.0, 0.0, 1.0)
+
+    # Unknown A vs ...
+    w[U, F] = (0.0, 1.0, 0.0)
+    w[U, N] = (0.0, 0.5, 0.5)
+    w[U, D] = (0.5, 0.0, 0.5)
+    w[U, U] = (0.0, 0.0, 1.0)
+
+    voteA = 0.0
+    voteB = 0.0
+    dnv = 0.0
+    for i in range(4):
+        for j in range(4):
+            pij = pA[i] * pB[j]
+            voteA += pij * w[i, j, 0]
+            voteB += pij * w[i, j, 1]
+            dnv   += pij * w[i, j, 2]
+
+    # Normalize small numeric drift
+    total = voteA + voteB + dnv
+    if total > 0:
+        voteA /= total
+        voteB /= total
+        dnv   /= total
+
+    turnout = (1 - dnv)
+    voteA = 100.0 * voteA/turnout
+    voteB = 100.0 * voteB/turnout
+    return voteA, voteB, turnout
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
@@ -215,85 +306,228 @@ def get_sentiment_analysis(choice1, choice2):
         print(f"Error in sentiment analysis endpoint: {e}")
         return jsonify({"error": str(e)}), 500
 
-def calculate_state_vote_split(recognition_1, favorability_1, recognition_2, favorability_2):
+def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorability_2, qprint=False):
     """
-    Returns (vote_share_1, vote_share_2) as percentages (0-100),
-    using 80% favorability and 20% recognition.
+    Gaussian copula simulation of joint attitudes and voting rules.
+
+    Inputs (legacy signature retained):
+      - recognition_1, recognition_2: treated as raw recognition scores for A and B
+      - favorability_1, favorability_2: ignored for this simulation
+
+    Process:
+      1) Normalize recognitions so R_A + R_B = 1
+      2) Build per-candidate marginals using:
+         - u(x) = (1 - x)^2  [unknown]
+         - n(x) = (1 - u(x)) * (1 - x)  [neutral]
+         - remainder = 1 - u - n; split into
+              favorable = remainder * (1 + F)/2
+              unfavorable = remainder - favorable
+      3) Sample N pairs from a Gaussian copula with rho = -0.9
+      4) Map to categories for A and B and apply voting rules
+      5) Return {votedA, votedB, turnout} where VotedA and VotedB sum to 1
     """
-    # Normalize recognition and favorability to 0-1
-    def norm(x):
-        # If already 0-1, leave as is; if -1 to 1, map to 0-1
-        if x < 0 or x > 1:
-            return (x + 1) / 2
-        return x
-    rec1 = norm(recognition_1)
-    rec2 = norm(recognition_2)
-    fav1 = norm(favorability_1)
-    fav2 = norm(favorability_2)
-    # Weighted sum
-    score1 = 0.2 * rec1 + 0.8 * fav1
-    score2 = 0.2 * rec2 + 0.8 * fav2
-    # Avoid both zero
-    if score1 == 0 and score2 == 0:
-        return (50.0, 50.0)
-    # Normalize to sum to 100
-    total = score1 + score2
-    pct1 = (score1 / total) * 100
-    pct2 = (score2 / total) * 100
-    return (pct1, pct2)
+    # Normalize recognitions so they sum to 1
+    
+
+    # Cache to avoid repeated heavy sims for identical inputs
+    # key = (round(R_A, 4), round(R_B, 4), SIM_DEFAULT_RHO, SIM_DEFAULT_N)
+    # if key in SIM_SPLIT_CACHE:
+    #     return SIM_SPLIT_CACHE[key]
+
+    def unknown_frac(x: float) -> float:
+        return float((1.0 - x) ** 2)
+
+    def neutral_frac(x: float) -> float:
+        u = unknown_frac(x)
+        return float(max(0.0, (1.0 - u) * (1.0 - x)))
+
+    def build_four_point_favorability(recognition: float, favorability: float) -> dict:
+        u = unknown_frac(recognition)
+        n = neutral_frac(recognition)
+        approval_split = (1 + favorability) / 2
+        rem = max(0.0, 1.0 - u - n)
+        f = max(0.0, rem * approval_split)
+        uf = max(0.0, rem - f)
+        probs = np.array([f, n, uf, u], dtype=float)
+        s = probs.sum()
+        if s <= 0:
+            probs = np.array([0.25, 0.25, 0.25, 0.25], dtype=float)
+        else:
+            probs = probs / s
+        return probs  # order: [fav, neu, unf, unk]
+
+    marg_A = build_four_point_favorability(recognition_1, favorability_1)
+    marg_B = build_four_point_favorability(recognition_2, favorability_2)
+
+    tprint(qprint, f"marg_A: {marg_A}, marg_B: {marg_B}")
+    vote_A, vote_B, turnout = calculate_vote_shares(marg_A, marg_B)
+
+    return {
+        "marg_A": marg_A,
+        "marg_B": marg_B,
+        "vote_A": vote_A,
+        "vote_B": vote_B,
+        "turnout": turnout
+    }
+
+def _get_trends_state_scores(choice1: str, choice2: str):
+    """Fetch Google Trends comparison and return (search_results, state_scores)."""
+    search_results = compare_google_trends(choice1, choice2)
+    state_scores = search_results.get('state_scores', {})
+    return search_results, state_scores
+
+def _get_sentiment_and_demographics(choice1: str, choice2: str):
+    """Fetch sentiment summary once and extract its demographic breakdown."""
+    sentiment_summary = sentiment_service.get_sentiment_summary(choice1, choice2)
+    demo_breakdown = sentiment_summary["sentiment_data"].get("demographic_breakdown", {})
+    return sentiment_summary, demo_breakdown
+
+def _load_state_demographics():
+    """Load per-state demographic mix from disk."""
+    with open('state_demographics.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def _normalize_state_recognition(score_data: dict, c1: str, c2: str):
+    """Compute normalized recognition for a state and total weight."""
+    rec1_raw = score_data.get(c1, 0.0)
+    rec2_raw = score_data.get(c2, 0.0)
+    rec1_norm = rec1_raw / 100.0
+    rec2_norm = rec2_raw / 100.0
+    rec_total_weight = rec1_raw + rec2_raw + 1e-6  # avoid zero
+    return rec1_raw, rec2_raw, rec1_norm, rec2_norm, rec_total_weight
+
+def _init_national_demo_acc():
+    return {}
+
+def _ensure_demo_bucket(national_demo_acc: dict, demo: str):
+    if demo not in national_demo_acc:
+        national_demo_acc[demo] = {
+            'w': 0.0,
+            'c1': 0.0, 'c2': 0.0,
+            'turnout': 0.0
+        }
+
+def _update_national_demo_acc(
+    national_demo_acc: dict,
+    demo: str,
+    percent: float,
+    rec_total_weight: float,
+    pct1: float, pct2: float, turnout: float
+):
+    _ensure_demo_bucket(national_demo_acc, demo)
+    w_national = (percent / 100.0) * rec_total_weight
+    national_demo_acc[demo]['w'] += w_national
+    national_demo_acc[demo]['c1'] += pct1 * turnout * w_national
+    national_demo_acc[demo]['c2'] += pct2 * turnout * w_national
+    national_demo_acc[demo]['turnout'] += turnout * w_national
+
+def _finalize_national_demographics(national_demo_acc: dict, c1: str, c2: str):
+    national_demographic_vote_splits = {}
+    national_demographic_vote_split_components = {}
+    for demo, acc in national_demo_acc.items():
+        c1_sum = acc['c1']
+        c2_sum = acc['c2']
+        total = (c1_sum + c2_sum) + 1e-6
+        c1_pct = 100.0 * (c1_sum / total)
+        c2_pct = 100.0 * (c2_sum / total)
+        national_demographic_vote_splits[demo] = {c1: c1_pct, c2: c2_pct}
+        
+        # For now, components are the same as the main splits since we don't have separate sentiment/recognition
+        national_demographic_vote_split_components[demo] = {
+            'combined': {c1: c1_pct, c2: c2_pct}
+        }
+    return national_demographic_vote_splits, national_demographic_vote_split_components
+
+def _winner_and_color(pct1: float, pct2: float, colors: list, c1: str, c2: str):
+    if pct1 > pct2:
+        return c1, colors[0]
+    if pct2 > pct1:
+        return c2, colors[1]
+    return None, '#e0e0e0'
+
+def _tally_electoral(state_winners: dict, search_results: dict, c1: str, c2: str):
+    electoral_tally = {c1: 0, c2: 0}
+    for state, winner in state_winners.items():
+        if winner:
+            votes = search_results.get('electoral_college', {}).get(state) or search_results.get('ELECTORAL_COLLEGE', {}).get(state)
+            if not votes:
+                votes = 0
+            electoral_tally[winner] += votes
+    return electoral_tally
 
 @app.route('/combined-analysis/<choice1>/<choice2>')
 def get_combined_analysis(choice1, choice2):
-    """Get both search volume and sentiment analysis, then for each state, calculate the winner using both sources and demographic bias."""
+    """Get both search volume and sentiment analysis, then for each state, calculate the winner using both sources and demographic bias.
+
+    This endpoint is structured as a series of small, readable helper steps.
+    """
     try:
-        # Get Google Trends data (state-by-state recognition)
-        search_results = compare_google_trends(choice1, choice2)
-        state_scores = search_results.get('state_scores', {})
-        # Get sentiment analysis ONCE (overall and by demographic)
-        sentiment_summary = sentiment_service.get_sentiment_summary(choice1, choice2)
-        demo_breakdown = sentiment_summary["sentiment_data"].get("demographic_breakdown", {})
-        # Load state demographic leans
-        with open('state_demographics.json', 'r', encoding='utf-8') as f:
-            state_demographics = json.load(f)
-        # Decide winner for each state using both trends and sentiment (with demographic bias)
+        # 1) Inputs
+        search_results, state_scores = _get_trends_state_scores(choice1, choice2)
+        sentiment_summary, demo_breakdown = _get_sentiment_and_demographics(choice1, choice2)
+        state_demographics = _load_state_demographics()
+
+        # 2) Iterate states and compute splits
         colors = choose_colors(choice1, choice2)
         state_colors = {}
         state_winners = {}
         state_vote_splits = {}
+        demographic_vote_splits = {}
+        demographic_vote_split_components = {}
+        national_demo_acc = _init_national_demo_acc()
         for state, score_data in state_scores.items():
-            lean = state_demographics.get(state, 'center')
-            demo_scores = demo_breakdown.get(lean, {})
-            # Recognition: Google Trends score, normalized 0-1
-            rec1 = score_data.get(choice1, 0)
-            rec2 = score_data.get(choice2, 0)
-            max_rec = max(rec1, rec2, 1)
-            rec1_norm = rec1 / max_rec
-            rec2_norm = rec2 / max_rec
-            # Favorability: sentiment, -1 to 1
-            fav1 = demo_scores.get(choice1, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice1, 0.0))
-            fav2 = demo_scores.get(choice2, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice2, 0.0))
-            # Calculate vote split
-            pct1, pct2 = calculate_state_vote_split(rec1_norm, fav1, rec2_norm, fav2)
+            demo_percents = state_demographics.get(state, {"conservative": 33, "moderate": 34, "liberal": 33})
+            demographic_vote_splits[state] = {}
+            demographic_vote_split_components[state] = {}
+            tprint((state=="CA"), f"score_data: {score_data}, choice1: {choice1}, choice2: {choice2}")
+            rec1_raw, rec2_raw, rec1_norm, rec2_norm, rec_total_weight = _normalize_state_recognition(score_data, choice1, choice2)
+            # Initialize state-level accumulators (weighted by demographic share)
+            c1_sum = 0.0
+            c2_sum = 0.0
+            total_turnout = 0.0
+            for demo, percent in demo_percents.items():
+                demo_scores = demo_breakdown.get(demo, {})
+                # Sentiment favorability for each candidate in this demographic
+                fav1 = demo_scores.get(choice1, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice1, 0.0))
+                fav2 = demo_scores.get(choice2, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice2, 0.0))
+                # Calculate vote split for this demographic
+                tprint((state=="CA"), f"demo: {demo}, percent: {percent}, state: {state}")
+                tprint((state=="CA"), f"rec1_norm: {rec1_norm}, rec2_norm: {rec2_norm}, fav1: {fav1}, fav2: {fav2}")
+                vote_split = calculate_vote_split(rec1_norm, fav1, rec2_norm, fav2, qprint=(state=="CA"))
+                pct1, pct2, turnout = vote_split['vote_A'], vote_split['vote_B'], vote_split['turnout']
+                tprint((state=="CA"), f"pct1: {pct1}, pct2: {pct2}, turnout: {turnout}")
+                demographic_vote_splits[state][demo] = {choice1: pct1, choice2: pct2}
+                # Accumulate into state-level weighted sums
+                w = percent
+                c1_sum += pct1 * w * turnout
+                c2_sum += pct2 * w * turnout
+                total_turnout += w * turnout
+
+                _update_national_demo_acc(
+                    national_demo_acc,
+                    demo,
+                    percent,
+                    rec_total_weight,
+                    pct1, pct2, turnout
+                )
+            pct1 = c1_sum / max(total_turnout, 1e-6)
+            pct2 = c2_sum / max(total_turnout, 1e-6)
             state_vote_splits[state] = {choice1: pct1, choice2: pct2}
             # Winner and color
-            if pct1 > pct2:
-                winner = choice1
-                state_colors[state] = colors[0]
-            elif pct2 > pct1:
-                winner = choice2
-                state_colors[state] = colors[1]
-            else:
-                winner = None
-                state_colors[state] = '#e0e0e0'
+            winner, color = _winner_and_color(pct1, pct2, colors, choice1, choice2)
             state_winners[state] = winner
+            state_colors[state] = color
         # Tally electoral votes
-        electoral_tally = {choice1: 0, choice2: 0}
-        for state, winner in state_winners.items():
-            if winner:
-                votes = search_results.get('electoral_college', {}).get(state) or search_results.get('ELECTORAL_COLLEGE', {}).get(state)
-                if not votes:
-                    votes = 0
-                electoral_tally[winner] += votes
+        electoral_tally = _tally_electoral(state_winners, search_results, choice1, choice2)
+        # Build national demographic vote splits (US) from accumulators
+        national_demographic_vote_splits, national_demographic_vote_split_components = _finalize_national_demographics(
+            national_demo_acc, choice1, choice2
+        )
+
+        # Also inject 'US' into the per-state dicts for frontend simplicity
+        demographic_vote_splits['US'] = national_demographic_vote_splits
+        demographic_vote_split_components['US'] = national_demographic_vote_split_components
+
         combined_results = {
             "state_colors": state_colors,
             "state_winners": state_winners,
@@ -302,6 +536,10 @@ def get_combined_analysis(choice1, choice2):
             "search_data": search_results,
             "sentiment_summary": sentiment_summary,
             "demographic_breakdown": demo_breakdown,
+            "demographic_vote_splits": demographic_vote_splits,
+            "demographic_vote_split_components": demographic_vote_split_components,
+            "national_demographic_vote_splits": {"US": national_demographic_vote_splits},
+            "national_demographic_vote_split_components": {"US": national_demographic_vote_split_components},
             "metadata": {
                 "choice1": choice1,
                 "choice2": choice2,

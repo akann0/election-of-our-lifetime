@@ -43,6 +43,10 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
   const [demographicBreakdown, setDemographicBreakdown] = useState({});
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const svgRef = useRef(null);
+  // Add state to hold the selected breakdown type
+  const [breakdownType, setBreakdownType] = useState('overall'); // 'overall', 'sentiment', 'recognition'
+  const [demographicVoteSplits, setDemographicVoteSplits] = useState({});
+  const [demographicVoteSplitComponents, setDemographicVoteSplitComponents] = useState({});
 
   // Function to update state colors - this will be used for electoral coloring
   const updateStateColor = (stateId, color) => {
@@ -143,6 +147,8 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       console.log('Received comparison results:', comparisonResults);
       setStateColors(comparisonResults.state_colors);
       setDemographicBreakdown(comparisonResults.demographic_breakdown || {});
+      setDemographicVoteSplits(comparisonResults.demographic_vote_splits || {});
+      setDemographicVoteSplitComponents(comparisonResults.demographic_vote_split_components || {});
       
       // You can also access the detailed analysis data if needed:
       // console.log('Trends data:', comparisonResults.trends_data);
@@ -177,9 +183,7 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
   // Order demographics: conservative, center-right, center, center-left, liberal
   const demographicOrder = [
     'conservative',
-    'center-right',
     'center',
-    'center-left',
     'liberal'
   ];
 
@@ -282,18 +286,24 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       {/* Demographic Breakdown Bar Chart */}
       {demographicBreakdown && Object.keys(demographicBreakdown).length > 0 && (
         <div className="demographic-breakdown">
-          <h3>Demographic Sentiment Breakdown</h3>
+          <h3>Demographic Vote Breakdown</h3>
+          <div style={{ marginBottom: 12 }}>
+            <button onClick={() => setBreakdownType('overall')} disabled={breakdownType === 'overall'}>Overall</button>
+            <button onClick={() => setBreakdownType('sentiment')} disabled={breakdownType === 'sentiment'}>Sentiment Only</button>
+            <button onClick={() => setBreakdownType('recognition')} disabled={breakdownType === 'recognition'}>Recognition Only</button>
+          </div>
           <div className="demographic-bars">
             {demographicOrder
               .filter(demo => demographicBreakdown[demo])
               .map((demo) => {
-                const scores = demographicBreakdown[demo];
-                // Convert -1..1 to 0..1 for both, then normalize so they sum to 1
-                let raw1 = typeof scores[choice1] === 'number' ? (scores[choice1] + 1) / 2 : 0.5;
-                let raw2 = typeof scores[choice2] === 'number' ? (scores[choice2] + 1) / 2 : 0.5;
-                const total = raw1 + raw2;
-                const percent1 = total > 0 ? (raw1 / total) * 100 : 50;
-                const percent2 = total > 0 ? (raw2 / total) * 100 : 50;
+                let percent1 = 50, percent2 = 50;
+                if (breakdownType === 'overall' && demographicVoteSplits['US'] && demographicVoteSplits['US'][demo]) {
+                  percent1 = demographicVoteSplits['US'][demo][choice1] || 0;
+                  percent2 = demographicVoteSplits['US'][demo][choice2] || 0;
+                } else if (breakdownType !== 'overall' && demographicVoteSplitComponents['US'] && demographicVoteSplitComponents['US'][demo]) {
+                  percent1 = demographicVoteSplitComponents['US'][demo][breakdownType][choice1] || 0;
+                  percent2 = demographicVoteSplitComponents['US'][demo][breakdownType][choice2] || 0;
+                }
                 return (
                   <div className="demographic-bar-row" key={demo}>
                     <div className="demographic-label">{demo.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>

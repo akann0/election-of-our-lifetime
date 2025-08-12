@@ -5,7 +5,7 @@
             "skew": "General news, slightly left",
             "weight": 15,
             "demographics": {
-                "political_leaning": "center-left"
+                "political_leaning": "center"
             }
         },
         {
@@ -37,7 +37,7 @@
             "skew": "Pop culture",
             "weight": 8,
             "demographics": {
-                "political_leaning": "center-left"
+                "political_leaning": "center"
             }
         },
         {
@@ -45,7 +45,7 @@
             "skew": "Pop culture",
             "weight": 7,
             "demographics": {
-                "political_leaning": "center-left"
+                "political_leaning": "left"
             }
         },
         {
@@ -53,7 +53,7 @@
             "skew": "Tech/culture",
             "weight": 8,
             "demographics": {
-                "political_leaning": "center-left"
+                "political_leaning": "left"
             }
         },
         {
@@ -73,14 +73,6 @@
             }
         },
         {
-            "subreddit": "r/technology",
-            "skew": "Tech/culture",
-            "weight": 5,
-            "demographics": {
-                "political_leaning": "center-left"
-            }
-        },
-        {
             "subreddit": "r/changeMyView",
             "skew": "Moral norms/values",
             "weight": 7,
@@ -93,7 +85,7 @@
             "skew": "Finance, markets, irreverent, center-right/libertarian",
             "weight": 10,
             "demographics": {
-                "political_leaning": "center-right"
+                "political_leaning": "conservative"
             }
         }
     ]

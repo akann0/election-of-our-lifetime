@@ -469,5 +469,3 @@ def test_reddit_sentiment():
     result = service.get_reddit_sentiment("CNN", "Fox News", test_mode=True)
     print(f"Reddit sentiment test result: {result}")
     return result 
-
-test_reddit_sentiment()

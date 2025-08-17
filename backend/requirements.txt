@@ -11,3 +11,4 @@ pandas==2.2.1
 sentence-transformers
 scikit-learn
 gensim
+gunicorn

@@ -432,7 +432,7 @@ def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorabil
 
     if qprint:
         print(f"Marginal A: {marg_A}, Marginal B: {marg_B}")
-        
+
     vote_A, vote_B, turnout = calculate_vote_shares(marg_A, marg_B)
 
     return {
@@ -496,7 +496,6 @@ def _update_national_demo_acc(
 
 def _finalize_national_demographics(national_demo_acc: dict, c1: str, c2: str):
     national_demographic_vote_splits = {}
-    national_demographic_vote_split_components = {}
     for demo, acc in national_demo_acc.items():
         c1_sum = acc['c1']
         c2_sum = acc['c2']
@@ -505,11 +504,8 @@ def _finalize_national_demographics(national_demo_acc: dict, c1: str, c2: str):
         c2_pct = 100.0 * (c2_sum / total)
         national_demographic_vote_splits[demo] = {c1: c1_pct, c2: c2_pct}
         
-        # For now, components are the same as the main splits since we don't have separate sentiment/recognition
-        national_demographic_vote_split_components[demo] = {
-            'combined': {c1: c1_pct, c2: c2_pct}
-        }
-    return national_demographic_vote_splits, national_demographic_vote_split_components
+
+    return national_demographic_vote_splits
 
 def _winner_and_color(pct1: float, pct2: float, colors: list, c1: str, c2: str):
     if pct1 > pct2:
@@ -566,7 +562,6 @@ def get_combined_analysis(choice1, choice2):
             demo_percents = state_demographics.get(state, {"conservative": 33, "moderate": 34, "liberal": 33})
             demographic_vote_splits[state] = {}
             demographic_vote_split_components[state] = {}
-            tprint((state=="CA"), f"score_data: {score_data}, choice1: {choice1}, choice2: {choice2}")
             rec1_raw, rec2_raw, rec1_norm, rec2_norm, rec_total_weight = _normalize_state_recognition(score_data, choice1, choice2)
             # Initialize state-level accumulators (weighted by demographic share)
             c1_sum = 0.0
@@ -584,13 +579,8 @@ def get_combined_analysis(choice1, choice2):
                 dsa_bonus_1, dsa_bonus_2 = calculate_demographic_bonus(dsa_results, dsa_demo_key, choice1, choice2)
                 
                 # Calculate vote split for this demographic with DSA bonuses AND USA Google totals
-                tprint((state=="CA"), f"demo: {demo}, percent: {percent}, state: {state}")
-                tprint((state=="CA"), f"rec1_norm: {rec1_norm}, rec2_norm: {rec2_norm}, base_fav1: {base_fav1}, base_fav2: {base_fav2}")
-                tprint((state=="CA"), f"DSA bonuses: {dsa_bonus_1:.3f}, {dsa_bonus_2:.3f}")
-                tprint((state=="CA"), f"USA Google totals: {usa_rec1:.3f}, {usa_rec2:.3f}")
                 vote_split = calculate_vote_split(rec1_norm, base_fav1, rec2_norm, base_fav2, qprint=(state=="CA"), dsa_bonus_1=dsa_bonus_1, dsa_bonus_2=dsa_bonus_2, usa_rec1=usa_rec1, usa_rec2=usa_rec2)
                 pct1, pct2, turnout = vote_split['vote_A'], vote_split['vote_B'], vote_split['turnout']
-                tprint((state=="CA"), f"pct1: {pct1}, pct2: {pct2}, turnout: {turnout}")
                 demographic_vote_splits[state][demo] = {choice1: pct1, choice2: pct2}
                 # Accumulate into state-level weighted sums
                 w = percent
@@ -608,14 +598,21 @@ def get_combined_analysis(choice1, choice2):
             pct1 = c1_sum / max(total_turnout, 1e-6)
             pct2 = c2_sum / max(total_turnout, 1e-6)
             state_vote_splits[state] = {choice1: pct1, choice2: pct2}
-            # Winner and color
+            _update_national_demo_acc(
+                national_demo_acc,
+                "overall",
+                1.0,
+                rec_total_weight,
+                pct1, pct2, total_turnout
+            )
+            # Winner and color  
             winner, color = _winner_and_color(pct1, pct2, colors, choice1, choice2)
             state_winners[state] = winner
             state_colors[state] = color
         # Tally electoral votes
         electoral_tally = _tally_electoral(state_winners, search_results, choice1, choice2)
         # Build national demographic vote splits (US) from accumulators
-        national_demographic_vote_splits, national_demographic_vote_split_components = _finalize_national_demographics(
+        national_demographic_vote_splits = _finalize_national_demographics(
             national_demo_acc, choice1, choice2
         )
 

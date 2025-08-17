@@ -250,6 +250,20 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
             <div className="fifty-percent-line"></div>
           </div>
         </div>
+        {/* National Popular Vote */}
+        {nationalDemographicData && Object.keys(nationalDemographicData).length > 0 && (
+        <div className="demographic-bars">
+          <div className="demographic-label">{"National Popular Vote"}</div>
+          <div className="demographic-bar-container" style={{ display: 'flex', width: '100%', height: '24px', background: '#eee', borderRadius: '6px', overflow: 'hidden', margin: '6px 0' }}>
+            <div className="demographic-bar red" style={{ width: `${nationalDemographicData.overall[choice1]}%`, background: '#F44336', color: nationalDemographicData.overall[choice1] > 15 ? '#fff' : '#000', display: 'flex', alignItems: 'center', justifyContent: nationalDemographicData.overall[choice1] > 15 ? 'center' : 'flex-start', fontWeight: 'bold', fontSize: '0.95em' }}>
+              {nationalDemographicData.overall[choice1] >= 10 ? `${nationalDemographicData.overall[choice1].toFixed(1)}%` : ''}
+            </div>
+            <div className="demographic-bar blue" style={{ width: `${nationalDemographicData.overall[choice2]}%`, background: '#2196F3', color: nationalDemographicData.overall[choice2] > 15 ? '#fff' : '#000', display: 'flex', alignItems: 'center', justifyContent: nationalDemographicData.overall[choice2] > 15 ? 'center' : 'flex-end', fontWeight: 'bold', fontSize: '0.95em' }}>
+              {nationalDemographicData.overall[choice2] >= 10 ? `${nationalDemographicData.overall[choice2].toFixed(1)}%` : ''}
+            </div>
+          </div>
+        </div>
+        )}
       </div>
       
       {isCurrentlyLoading && (

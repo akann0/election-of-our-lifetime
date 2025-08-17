@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json, pprint
 from datetime import datetime
 import os, time, random
+from typing import Dict, Tuple
 from get_election_results import compare_google_trends, load_cache, save_cache
 from sentiment_service import sentiment_service
 from dsa_service import dsa_service
@@ -14,7 +15,6 @@ SIM_DEFAULT_RHO = -0.9
 SIM_SPLIT_CACHE = {}
 
 def tprint(do_print=False, *args, **kwargs):
-    return
     if do_print:
         print(*args, **kwargs)
 
@@ -307,33 +307,73 @@ def get_sentiment_analysis(choice1, choice2):
         print(f"Error in sentiment analysis endpoint: {e}")
         return jsonify({"error": str(e)}), 500
 
-def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorability_2, qprint=False):
+def calculate_demographic_bonus(dsa_results: Dict, demographic: str, choice1: str, choice2: str, bonus_multiplier: float = 0.3) -> Tuple[float, float]:
     """
-    Gaussian copula simulation of joint attitudes and voting rules.
+    Calculate demographic bonus/penalty from DSA results
+    
+    Args:
+        dsa_results: Results from DSA analysis
+        demographic: The demographic group (CONSERVATIVE, LIBERAL, MODERATE)
+        choice1, choice2: The two choices being compared
+        bonus_multiplier: How much to amplify the DSA differences (0.0-1.0)
+    
+    Returns:
+        Tuple of (choice1_bonus, choice2_bonus) - values between -bonus_multiplier and +bonus_multiplier
+    """
+    try:
+        # Get the demographic similarities from DSA results
+        demo_sims = dsa_results.get("demographic_similarities", {}).get(demographic, {})
+        
+        if not demo_sims or choice1 not in demo_sims or choice2 not in demo_sims:
+            # No DSA data available, return neutral bonuses
+            return 0.0, 0.0
+        
+        sim1 = demo_sims[choice1]
+        sim2 = demo_sims[choice2]
+        
+        # Calculate the difference and apply bonus multiplier
+        # DSA similarities are 0-1, so difference is -1 to +1
+        diff = sim1 - sim2
+        
+        # Apply multiplier and clamp to reasonable range
+        choice1_bonus = min(max(diff * bonus_multiplier, -bonus_multiplier), bonus_multiplier)
+        choice2_bonus = min(max(-diff * bonus_multiplier, -bonus_multiplier), bonus_multiplier)
+        
+        return choice1_bonus, choice2_bonus
+        
+    except Exception as e:
+        print(f"Error calculating demographic bonus: {e}")
+        return 0.0, 0.0
 
-    Inputs (legacy signature retained):
-      - recognition_1, recognition_2: treated as raw recognition scores for A and B
-      - favorability_1, favorability_2: ignored for this simulation
+def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorability_2, qprint=False, dsa_bonus_1=0.0, dsa_bonus_2=0.0):
+    """
+    Gaussian copula simulation of joint attitudes and voting rules with DSA demographic bonuses.
+
+    Inputs:
+      - recognition_1, recognition_2: raw recognition scores for A and B
+      - favorability_1, favorability_2: base favorability scores (now used with DSA bonuses)
+      - dsa_bonus_1, dsa_bonus_2: demographic bonuses from DSA analysis (-0.3 to +0.3)
 
     Process:
-      1) Normalize recognitions so R_A + R_B = 1
-      2) Build per-candidate marginals using:
+      1) Apply DSA bonuses to favorability scores
+      2) Normalize recognitions so R_A + R_B = 1
+      3) Build per-candidate marginals using:
          - u(x) = (1 - x)^2  [unknown]
          - n(x) = (1 - u(x)) * (1 - x)  [neutral]
          - remainder = 1 - u - n; split into
               favorable = remainder * (1 + F)/2
               unfavorable = remainder - favorable
-      3) Sample N pairs from a Gaussian copula with rho = -0.9
-      4) Map to categories for A and B and apply voting rules
+      4) Apply voting rules
       5) Return {votedA, votedB, turnout} where VotedA and VotedB sum to 1
     """
-    # Normalize recognitions so they sum to 1
+    # Apply DSA bonuses to favorability scores
+    adjusted_favorability_1 = min(max(favorability_1 + dsa_bonus_1, -1.0), 1.0)
+    adjusted_favorability_2 = min(max(favorability_2 + dsa_bonus_2, -1.0), 1.0)
     
-
-    # Cache to avoid repeated heavy sims for identical inputs
-    # key = (round(R_A, 4), round(R_B, 4), SIM_DEFAULT_RHO, SIM_DEFAULT_N)
-    # if key in SIM_SPLIT_CACHE:
-    #     return SIM_SPLIT_CACHE[key]
+    if qprint:
+        print(f"Original favorability: {favorability_1:.3f}, {favorability_2:.3f}")
+        print(f"DSA bonuses: {dsa_bonus_1:.3f}, {dsa_bonus_2:.3f}")
+        print(f"Adjusted favorability: {adjusted_favorability_1:.3f}, {adjusted_favorability_2:.3f}")
 
     def unknown_frac(x: float) -> float:
         return float((1.0 - x) ** 2)
@@ -357,8 +397,8 @@ def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorabil
             probs = probs / s
         return probs  # order: [fav, neu, unf, unk]
 
-    marg_A = build_four_point_favorability(recognition_1, favorability_1)
-    marg_B = build_four_point_favorability(recognition_2, favorability_2)
+    marg_A = build_four_point_favorability(recognition_1, adjusted_favorability_1)
+    marg_B = build_four_point_favorability(recognition_2, adjusted_favorability_2)
 
     tprint(qprint, f"marg_A: {marg_A}, marg_B: {marg_B}")
     vote_A, vote_B, turnout = calculate_vote_shares(marg_A, marg_B)
@@ -463,10 +503,15 @@ def get_combined_analysis(choice1, choice2):
     This endpoint is structured as a series of small, readable helper steps.
     """
     try:
+        print(f"Starting combined analysis for {choice1} vs {choice2}")
         # 1) Inputs
         search_results, state_scores = _get_trends_state_scores(choice1, choice2)
         sentiment_summary, demo_breakdown = _get_sentiment_and_demographics(choice1, choice2)
         state_demographics = _load_state_demographics()
+        
+        # Get DSA analysis for demographic bonuses
+        dsa_results = dsa_service.analyze(choice1, choice2)
+        print(f"DSA analysis completed for {choice1} vs {choice2}")
 
         # 2) Iterate states and compute splits
         colors = choose_colors(choice1, choice2)
@@ -487,14 +532,21 @@ def get_combined_analysis(choice1, choice2):
             c2_sum = 0.0
             total_turnout = 0.0
             for demo, percent in demo_percents.items():
-                demo_scores = demo_breakdown.get(demo, {})
-                # Sentiment favorability for each candidate in this demographic
-                fav1 = demo_scores.get(choice1, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice1, 0.0))
-                fav2 = demo_scores.get(choice2, sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice2, 0.0))
-                # Calculate vote split for this demographic
+                # Use national sentiment scores as base, then apply DSA demographic bonuses
+                base_fav1 = sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice1, 0.0)
+                base_fav2 = sentiment_summary["sentiment_data"].get("sentiment_scores", {}).get(choice2, 0.0)
+                
+                # Convert demographic key to match DSA format (conservative -> CONSERVATIVE)
+                dsa_demo_key = demo.upper()
+                
+                # Calculate DSA bonuses for this demographic
+                dsa_bonus_1, dsa_bonus_2 = calculate_demographic_bonus(dsa_results, dsa_demo_key, choice1, choice2)
+                
+                # Calculate vote split for this demographic with DSA bonuses
                 tprint((state=="CA"), f"demo: {demo}, percent: {percent}, state: {state}")
-                tprint((state=="CA"), f"rec1_norm: {rec1_norm}, rec2_norm: {rec2_norm}, fav1: {fav1}, fav2: {fav2}")
-                vote_split = calculate_vote_split(rec1_norm, fav1, rec2_norm, fav2, qprint=(state=="CA"))
+                tprint((state=="CA"), f"rec1_norm: {rec1_norm}, rec2_norm: {rec2_norm}, base_fav1: {base_fav1}, base_fav2: {base_fav2}")
+                tprint((state=="CA"), f"DSA bonuses: {dsa_bonus_1:.3f}, {dsa_bonus_2:.3f}")
+                vote_split = calculate_vote_split(rec1_norm, base_fav1, rec2_norm, base_fav2, qprint=(state=="CA"), dsa_bonus_1=dsa_bonus_1, dsa_bonus_2=dsa_bonus_2)
                 pct1, pct2, turnout = vote_split['vote_A'], vote_split['vote_B'], vote_split['turnout']
                 tprint((state=="CA"), f"pct1: {pct1}, pct2: {pct2}, turnout: {turnout}")
                 demographic_vote_splits[state][demo] = {choice1: pct1, choice2: pct2}
@@ -535,12 +587,13 @@ def get_combined_analysis(choice1, choice2):
             "electoral_tally": electoral_tally,
             "search_data": search_results,
             "sentiment_summary": sentiment_summary,
+            "dsa_results": dsa_results,
             "demographic_vote_splits": demographic_vote_splits,
             "metadata": {
                 "choice1": choice1,
                 "choice2": choice2,
                 "timestamp": datetime.now().isoformat(),
-                "analysis_type": "combined"
+                "analysis_type": "combined_with_dsa"
             }
         }
 

@@ -4241,5 +4241,359 @@
         "total_weight": 107
       }
     }
+  },
+  "reddit_lacrosse_basketball": {
+    "sentiment": {
+      "sentiment_scores": {
+        "lacrosse": -0.0672157894736842,
+        "basketball": 0.015248717948717952
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "lacrosse": -0.396475,
+          "basketball": 0.04020000000000001,
+          "weight": 4
+        },
+        "center-right": {
+          "lacrosse": 0.0,
+          "basketball": 0.0,
+          "weight": 0
+        },
+        "center": {
+          "lacrosse": -0.014376190476190466,
+          "basketball": 0.017233095238095252,
+          "weight": 14
+        },
+        "center-left": {
+          "lacrosse": 0.0,
+          "basketball": 0.0,
+          "weight": 0
+        },
+        "liberal": {
+          "lacrosse": 0.0,
+          "basketball": -0.324475,
+          "weight": 0
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 58,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 107
+      }
+    },
+    "timestamp": 1755392255.604568,
+    "posts_analyzed": 58,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "lacrosse|||basketball": {
+    "sentiment_scores": {
+      "lacrosse": -0.0672157894736842,
+      "basketball": 0.015248717948717952
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "lacrosse": -0.0672157894736842,
+          "basketball": 0.015248717948717952
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "lacrosse": -0.396475,
+            "basketball": 0.04020000000000001,
+            "weight": 4
+          },
+          "center-right": {
+            "lacrosse": 0.0,
+            "basketball": 0.0,
+            "weight": 0
+          },
+          "center": {
+            "lacrosse": -0.014376190476190466,
+            "basketball": 0.017233095238095252,
+            "weight": 14
+          },
+          "center-left": {
+            "lacrosse": 0.0,
+            "basketball": 0.0,
+            "weight": 0
+          },
+          "liberal": {
+            "lacrosse": 0.0,
+            "basketball": -0.324475,
+            "weight": 0
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 58,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 107
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "lacrosse": -0.396475,
+        "basketball": 0.04020000000000001,
+        "weight": 4
+      },
+      "center-right": {
+        "lacrosse": 0.0,
+        "basketball": 0.0,
+        "weight": 0
+      },
+      "center": {
+        "lacrosse": -0.014376190476190466,
+        "basketball": 0.017233095238095252,
+        "weight": 14
+      },
+      "center-left": {
+        "lacrosse": 0.0,
+        "basketball": 0.0,
+        "weight": 0
+      },
+      "liberal": {
+        "lacrosse": 0.0,
+        "basketball": -0.324475,
+        "weight": 0
+      }
+    },
+    "metadata": {
+      "choice1": "lacrosse",
+      "choice2": "basketball",
+      "timestamp": 1755392255.613566,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 58,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 107
+      }
+    }
+  },
+  "reddit_football_basketball": {
+    "sentiment": {
+      "sentiment_scores": {
+        "football": -0.08542619047619048,
+        "basketball": 0.015248717948717952
+      },
+      "demographic_breakdown": {
+        "conservative": {
+          "football": 0.004674999999999999,
+          "basketball": 0.04020000000000001,
+          "weight": 8
+        },
+        "center-right": {
+          "football": 0.0,
+          "basketball": 0.0,
+          "weight": 0
+        },
+        "center": {
+          "football": -0.12668119047619048,
+          "basketball": 0.017233095238095252,
+          "weight": 24
+        },
+        "center-left": {
+          "football": 0.0,
+          "basketball": 0.0,
+          "weight": 0
+        },
+        "liberal": {
+          "football": -0.14414999999999997,
+          "basketball": -0.324475,
+          "weight": 4
+        }
+      },
+      "metadata": {
+        "posts_analyzed": 81,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 107
+      }
+    },
+    "timestamp": 1755392493.5123324,
+    "posts_analyzed": 81,
+    "subreddits_used": [
+      "news",
+      "AskReddit",
+      "politics",
+      "Conservative",
+      "television",
+      "movies",
+      "technology",
+      "UnitedStates",
+      "OutOfTheLoop",
+      "changeMyView",
+      "wallstreetbets"
+    ]
+  },
+  "football|||basketball": {
+    "sentiment_scores": {
+      "football": -0.08542619047619048,
+      "basketball": 0.015248717948717952
+    },
+    "source_breakdown": {
+      "reddit": {
+        "sentiment_scores": {
+          "football": -0.08542619047619048,
+          "basketball": 0.015248717948717952
+        },
+        "demographic_breakdown": {
+          "conservative": {
+            "football": 0.004674999999999999,
+            "basketball": 0.04020000000000001,
+            "weight": 8
+          },
+          "center-right": {
+            "football": 0.0,
+            "basketball": 0.0,
+            "weight": 0
+          },
+          "center": {
+            "football": -0.12668119047619048,
+            "basketball": 0.017233095238095252,
+            "weight": 24
+          },
+          "center-left": {
+            "football": 0.0,
+            "basketball": 0.0,
+            "weight": 0
+          },
+          "liberal": {
+            "football": -0.14414999999999997,
+            "basketball": -0.324475,
+            "weight": 4
+          }
+        },
+        "metadata": {
+          "posts_analyzed": 81,
+          "subreddits_used": [
+            "news",
+            "AskReddit",
+            "politics",
+            "Conservative",
+            "television",
+            "movies",
+            "technology",
+            "UnitedStates",
+            "OutOfTheLoop",
+            "changeMyView",
+            "wallstreetbets"
+          ],
+          "total_weight": 107
+        }
+      }
+    },
+    "demographic_breakdown": {
+      "conservative": {
+        "football": 0.004674999999999999,
+        "basketball": 0.04020000000000001,
+        "weight": 8
+      },
+      "center-right": {
+        "football": 0.0,
+        "basketball": 0.0,
+        "weight": 0
+      },
+      "center": {
+        "football": -0.12668119047619048,
+        "basketball": 0.017233095238095252,
+        "weight": 24
+      },
+      "center-left": {
+        "football": 0.0,
+        "basketball": 0.0,
+        "weight": 0
+      },
+      "liberal": {
+        "football": -0.14414999999999997,
+        "basketball": -0.324475,
+        "weight": 4
+      }
+    },
+    "metadata": {
+      "choice1": "football",
+      "choice2": "basketball",
+      "timestamp": 1755392493.5243337,
+      "sources": [
+        "reddit"
+      ],
+      "reddit_metadata": {
+        "posts_analyzed": 81,
+        "subreddits_used": [
+          "news",
+          "AskReddit",
+          "politics",
+          "Conservative",
+          "television",
+          "movies",
+          "technology",
+          "UnitedStates",
+          "OutOfTheLoop",
+          "changeMyView",
+          "wallstreetbets"
+        ],
+        "total_weight": 107
+      }
+    }
   }
 }

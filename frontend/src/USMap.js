@@ -42,10 +42,10 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
   const [currentComparison, setCurrentComparison] = useState('');
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const svgRef = useRef(null);
-  // Add state to hold the selected breakdown type
-  const [breakdownType, setBreakdownType] = useState('overall'); // 'overall', 'sentiment', 'recognition'
+  // Add state to hold the breakdown display
+  const [showFurtherBreakdown, setShowFurtherBreakdown] = useState(false);
   const [nationalDemographicData, setNationalDemographicData] = useState({});
-  const [nationalDemographicComponents, setNationalDemographicComponents] = useState({});
+  const [analysisData, setAnalysisData] = useState({});
 
   // Function to update state colors - this will be used for electoral coloring
   const updateStateColor = (stateId, color) => {
@@ -149,14 +149,12 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       // Extract US national demographic data directly from the response
       const nationalData = comparisonResults.national_demographic_vote_splits?.US || 
                           comparisonResults.demographic_vote_splits?.US || {};
-      const nationalComponents = comparisonResults.national_demographic_vote_split_components?.US || 
-                                comparisonResults.demographic_vote_split_components?.US || {};
       
       console.log('National demographic data:', nationalData);
-      console.log('National demographic components:', nationalComponents);
+      console.log('Full comparison results:', comparisonResults);
       
       setNationalDemographicData(nationalData);
-      setNationalDemographicComponents(nationalComponents);
+      setAnalysisData(comparisonResults);
       
       // You can also access the detailed analysis data if needed:
       // console.log('Trends data:', comparisonResults.trends_data);
@@ -291,30 +289,36 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
           }}
         />
       </div>
-      {/* Demographic Breakdown Bar Chart */}
+      {/* Analysis Breakdown */}
       {nationalDemographicData && Object.keys(nationalDemographicData).length > 0 && (
-        <div className="demographic-breakdown">
-          <h3>National Demographic Vote Breakdown</h3>
-          <div style={{ marginBottom: 12 }}>
-            <button onClick={() => setBreakdownType('overall')} disabled={breakdownType === 'overall'}>Overall</button>
-            <button onClick={() => setBreakdownType('sentiment')} disabled={breakdownType === 'sentiment'}>Sentiment Only</button>
-            <button onClick={() => setBreakdownType('recognition')} disabled={breakdownType === 'recognition'}>Recognition Only</button>
+        <div className="analysis-breakdown">
+          <div className="breakdown-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0 }}>National Demographic Vote Breakdown</h3>
+            <button 
+              className="further-breakdown-toggle"
+              onClick={() => setShowFurtherBreakdown(!showFurtherBreakdown)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: showFurtherBreakdown ? '#2196F3' : '#f0f0f0',
+                color: showFurtherBreakdown ? 'white' : '#333',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {showFurtherBreakdown ? 'Hide' : 'Show'} Further Breakdown
+            </button>
           </div>
+          
+          {/* Basic Demographic Bars */}
           <div className="demographic-bars">
             {demographicOrder
-              .filter(demo => nationalDemographicData[demo] || (nationalDemographicComponents[demo] && breakdownType !== 'overall'))
+              .filter(demo => nationalDemographicData[demo])
               .map((demo) => {
-                let percent1 = 50, percent2 = 50;
-                
-                if (breakdownType === 'overall' && nationalDemographicData[demo]) {
-                  // Use the main demographic data for overall breakdown
-                  percent1 = nationalDemographicData[demo][choice1] || 0;
-                  percent2 = nationalDemographicData[demo][choice2] || 0;
-                } else if (breakdownType !== 'overall' && nationalDemographicComponents[demo]?.[breakdownType]) {
-                  // Use component-specific data for sentiment/recognition only
-                  percent1 = nationalDemographicComponents[demo][breakdownType][choice1] || 0;
-                  percent2 = nationalDemographicComponents[demo][breakdownType][choice2] || 0;
-                }
+                const percent1 = nationalDemographicData[demo][choice1] || 0;
+                const percent2 = nationalDemographicData[demo][choice2] || 0;
                 
                 return (
                   <div className="demographic-bar-row" key={demo}>
@@ -331,6 +335,75 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
                 );
               })}
           </div>
+
+          {/* Further Breakdown Section */}
+          {showFurtherBreakdown && analysisData && (
+            <div className="further-breakdown" style={{ marginTop: '20px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+              <h4 style={{ marginBottom: '16px', color: '#333' }}>Detailed Analysis Components</h4>
+              
+              {/* Google Trends Data */}
+              {analysisData.search_data && (
+                <div className="breakdown-section" style={{ marginBottom: '16px' }}>
+                  <h5 style={{ color: '#2196F3', marginBottom: '8px' }}>🔍 Google Search Volume</h5>
+                  <div style={{ fontSize: '0.9em', color: '#666' }}>
+                    <p><strong>Winner:</strong> {analysisData.search_data.winner || 'No clear winner'}</p>
+                    <p><strong>Electoral Votes:</strong> {JSON.stringify(analysisData.electoral_tally || {})}</p>
+                    
+                    {/* US Weighted Average Score */}
+                    {analysisData.search_data.state_scores?.US && (
+                      <div style={{ marginTop: '12px', padding: '8px', backgroundColor: '#e3f2fd', borderRadius: '4px' }}>
+                        <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#1976d2' }}>US Weighted Average (by Electoral Votes):</p>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '0.85em' }}>
+                          <span><strong>{choice1}:</strong> {analysisData.search_data.state_scores.US[choice1]}</span>
+                          <span><strong>{choice2}:</strong> {analysisData.search_data.state_scores.US[choice2]}</span>
+                          <span style={{ color: '#666' }}>
+                            <strong>Margin:</strong> {analysisData.search_data.state_scores.US.margin}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sentiment Analysis Data */}
+              {analysisData.sentiment_summary && (
+                <div className="breakdown-section" style={{ marginBottom: '16px' }}>
+                  <h5 style={{ color: '#FF9800', marginBottom: '8px' }}>💭 Sentiment Analysis</h5>
+                  <div style={{ fontSize: '0.9em', color: '#666' }}>
+                    {analysisData.sentiment_summary.sentiment_data?.sentiment_scores && (
+                      <div>
+                        <p><strong>{choice1}:</strong> {(analysisData.sentiment_summary.sentiment_data.sentiment_scores[choice1] * 100).toFixed(1)}% positive</p>
+                        <p><strong>{choice2}:</strong> {(analysisData.sentiment_summary.sentiment_data.sentiment_scores[choice2] * 100).toFixed(1)}% positive</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* DSA Demographic Similarity */}
+              {analysisData.dsa_results && (
+                <div className="breakdown-section">
+                  <h5 style={{ color: '#9C27B0', marginBottom: '8px' }}>🎯 Demographic Similarity Analysis</h5>
+                  <div style={{ fontSize: '0.9em', color: '#666' }}>
+                    {analysisData.dsa_results.demographic_preferences && (
+                      <div>
+                        {Object.entries(analysisData.dsa_results.demographic_preferences).map(([demo, pref]) => (
+                          <p key={demo}>
+                            <strong>{demo}:</strong> Prefers {pref.preferred_choice} 
+                            (margin: {(pref.margin * 100).toFixed(1)}%, confidence: {pref.confidence})
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <p style={{ marginTop: '8px', fontStyle: 'italic' }}>
+                      Method: {analysisData.dsa_results.embedding_method || 'Unknown'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

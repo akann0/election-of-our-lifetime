@@ -163,7 +163,32 @@ def compare_google_trends(choice1, choice2, timeframe="now 7-d", sleep_between=1
                 'margin': 20
             }
     
+    # Calculate US weighted average score based on electoral college weights
+    total_electoral_votes = sum(ELECTORAL_COLLEGE.values())
+    weighted_choice1 = 0
+    weighted_choice2 = 0
+    
+    for state, scores in state_scores.items():
+        electoral_weight = ELECTORAL_COLLEGE[state]
+        weighted_choice1 += scores[choice1] * electoral_weight
+        weighted_choice2 += scores[choice2] * electoral_weight
+    
+    # Calculate final weighted averages
+    us_choice1_score = weighted_choice1 / total_electoral_votes
+    us_choice2_score = weighted_choice2 / total_electoral_votes
+    us_winner = choice1 if us_choice1_score >= us_choice2_score else choice2
+    us_margin = abs(us_choice1_score - us_choice2_score)
+    
+    # Add US national average to state_scores
+    state_scores['US'] = {
+        choice1: round(us_choice1_score, 1),
+        choice2: round(us_choice2_score, 1),
+        'winner': us_winner,
+        'margin': round(us_margin, 1)
+    }
+    
     print("Google Trends Overall winner: ", overall)
+    print(f"US weighted average: {choice1}={us_choice1_score:.1f}, {choice2}={us_choice2_score:.1f}")
     
     return {
         "state_winners": state_winners,

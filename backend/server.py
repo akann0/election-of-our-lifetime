@@ -15,6 +15,7 @@ SIM_DEFAULT_RHO = -0.9
 SIM_SPLIT_CACHE = {}
 
 def tprint(do_print=False, *args, **kwargs):
+    return
     if do_print:
         print(*args, **kwargs)
 
@@ -345,14 +346,15 @@ def calculate_demographic_bonus(dsa_results: Dict, demographic: str, choice1: st
         print(f"Error calculating demographic bonus: {e}")
         return 0.0, 0.0
 
-def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorability_2, qprint=False, dsa_bonus_1=0.0, dsa_bonus_2=0.0):
+def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorability_2, qprint=False, dsa_bonus_1=0.0, dsa_bonus_2=0.0, usa_rec1=0.5, usa_rec2=0.5):
     """
-    Gaussian copula simulation of joint attitudes and voting rules with DSA demographic bonuses.
+    Gaussian copula simulation of joint attitudes and voting rules with DSA demographic bonuses and USA Google totals.
 
     Inputs:
       - recognition_1, recognition_2: raw recognition scores for A and B
       - favorability_1, favorability_2: base favorability scores (now used with DSA bonuses)
       - dsa_bonus_1, dsa_bonus_2: demographic bonuses from DSA analysis (-0.3 to +0.3)
+      - usa_rec1, usa_rec2: USA weighted average Google Trends recognition scores (0-1)
 
     Process:
       1) Apply DSA bonuses to favorability scores
@@ -366,26 +368,54 @@ def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorabil
       4) Apply voting rules
       5) Return {votedA, votedB, turnout} where VotedA and VotedB sum to 1
     """
+    DEMOGRAPHIC_SIMILARITY_FAVORABILITY_ADJUSTMENT_MULTIPLIER = 1
+    DEMOGRAPHIC_SIMILARITY_RECOGNITION_ADJUSTMENT_MULTIPLIER = 1
+    STATE_SPECIFIC_RECOGNITION_FAVORABILITY_MULTIPLIER = 5
+
+    
+    state_specific_recognition_1 = (usa_rec1 - recognition_1) / 100.0
+    state_specific_recognition_2 = (usa_rec2 - recognition_2) / 100.0
+
+    # Normalize recognitions so they sum to 1
+    rec_total_weight = recognition_1 + recognition_2 + 1e-6  # avoid zero
+    recognition_1 = recognition_1 / rec_total_weight
+    recognition_2 = recognition_2 / rec_total_weight
+
+
     # Apply DSA bonuses to favorability scores
-    adjusted_favorability_1 = min(max(favorability_1 + dsa_bonus_1, -1.0), 1.0)
-    adjusted_favorability_2 = min(max(favorability_2 + dsa_bonus_2, -1.0), 1.0)
+    adjusted_favorability_1 = min(max(favorability_1 + dsa_bonus_1 * DEMOGRAPHIC_SIMILARITY_FAVORABILITY_ADJUSTMENT_MULTIPLIER + state_specific_recognition_1 * STATE_SPECIFIC_RECOGNITION_FAVORABILITY_MULTIPLIER, -1.0), 1.0)
+    adjusted_favorability_2 = min(max(favorability_2 + dsa_bonus_2 * DEMOGRAPHIC_SIMILARITY_FAVORABILITY_ADJUSTMENT_MULTIPLIER + state_specific_recognition_2 * STATE_SPECIFIC_RECOGNITION_FAVORABILITY_MULTIPLIER, -1.0), 1.0)
+
+    # Also adjust recognition scores
+    adjusted_recognition_1 = min(max(recognition_1 + dsa_bonus_1 * DEMOGRAPHIC_SIMILARITY_RECOGNITION_ADJUSTMENT_MULTIPLIER, -1.0), 1.0)
+    adjusted_recognition_2 = min(max(recognition_2 + dsa_bonus_2 * DEMOGRAPHIC_SIMILARITY_RECOGNITION_ADJUSTMENT_MULTIPLIER, -1.0), 1.0)
     
     if qprint:
         print(f"Original favorability: {favorability_1:.3f}, {favorability_2:.3f}")
         print(f"DSA bonuses: {dsa_bonus_1:.3f}, {dsa_bonus_2:.3f}")
+        print(f"State specific recognition: {state_specific_recognition_1:.3f}, {state_specific_recognition_2:.3f}")
         print(f"Adjusted favorability: {adjusted_favorability_1:.3f}, {adjusted_favorability_2:.3f}")
+        print(f"USA Google totals: {usa_rec1:.3f}, {usa_rec2:.3f}")
 
     def unknown_frac(x: float) -> float:
-        return float((1.0 - x) ** 2)
+        #logistic funciton where k=3
+        k = 2.5
+        c = 0.5
+        return 1.0 - float(1.0 / (1.0 + np.exp(-k *(x + c))))
 
     def neutral_frac(x: float) -> float:
         u = unknown_frac(x)
         return float(max(0.0, (1.0 - u) * (1.0 - x)))
 
+    def approval_frac(x: float) -> float:
+        k = 7
+        c = 0
+        return float(1.0 / (1.0 + np.exp(-k *(x + c))))
+
     def build_four_point_favorability(recognition: float, favorability: float) -> dict:
         u = unknown_frac(recognition)
         n = neutral_frac(recognition)
-        approval_split = (1 + favorability) / 2
+        approval_split = approval_frac(favorability)
         rem = max(0.0, 1.0 - u - n)
         f = max(0.0, rem * approval_split)
         uf = max(0.0, rem - f)
@@ -397,10 +427,12 @@ def calculate_vote_split(recognition_1, favorability_1, recognition_2, favorabil
             probs = probs / s
         return probs  # order: [fav, neu, unf, unk]
 
-    marg_A = build_four_point_favorability(recognition_1, adjusted_favorability_1)
-    marg_B = build_four_point_favorability(recognition_2, adjusted_favorability_2)
+    marg_A = build_four_point_favorability(adjusted_recognition_1, adjusted_favorability_1)
+    marg_B = build_four_point_favorability(adjusted_recognition_2, adjusted_favorability_2)
 
-    tprint(qprint, f"marg_A: {marg_A}, marg_B: {marg_B}")
+    if qprint:
+        print(f"Marginal A: {marg_A}, Marginal B: {marg_B}")
+        
     vote_A, vote_B, turnout = calculate_vote_shares(marg_A, marg_B)
 
     return {
@@ -513,7 +545,12 @@ def get_combined_analysis(choice1, choice2):
         dsa_results = dsa_service.analyze(choice1, choice2)
         print(f"DSA analysis completed for {choice1} vs {choice2}")
 
-        # 2) Iterate states and compute splits
+        # 2) Get USA Google total for vote split calculations
+        usa_google_scores = state_scores.get('US', {choice1: 50, choice2: 50})
+        usa_rec1 = usa_google_scores.get(choice1, 50) / 100.0  # Normalize to 0-1
+        usa_rec2 = usa_google_scores.get(choice2, 50) / 100.0  # Normalize to 0-1
+        
+        # 3) Iterate states and compute splits
         colors = choose_colors(choice1, choice2)
         state_colors = {}
         state_winners = {}
@@ -522,6 +559,10 @@ def get_combined_analysis(choice1, choice2):
         demographic_vote_split_components = {}
         national_demo_acc = _init_national_demo_acc()
         for state, score_data in state_scores.items():
+            # Skip the US aggregate when processing individual states
+            if state == 'US':
+                continue
+                
             demo_percents = state_demographics.get(state, {"conservative": 33, "moderate": 34, "liberal": 33})
             demographic_vote_splits[state] = {}
             demographic_vote_split_components[state] = {}
@@ -542,11 +583,12 @@ def get_combined_analysis(choice1, choice2):
                 # Calculate DSA bonuses for this demographic
                 dsa_bonus_1, dsa_bonus_2 = calculate_demographic_bonus(dsa_results, dsa_demo_key, choice1, choice2)
                 
-                # Calculate vote split for this demographic with DSA bonuses
+                # Calculate vote split for this demographic with DSA bonuses AND USA Google totals
                 tprint((state=="CA"), f"demo: {demo}, percent: {percent}, state: {state}")
                 tprint((state=="CA"), f"rec1_norm: {rec1_norm}, rec2_norm: {rec2_norm}, base_fav1: {base_fav1}, base_fav2: {base_fav2}")
                 tprint((state=="CA"), f"DSA bonuses: {dsa_bonus_1:.3f}, {dsa_bonus_2:.3f}")
-                vote_split = calculate_vote_split(rec1_norm, base_fav1, rec2_norm, base_fav2, qprint=(state=="CA"), dsa_bonus_1=dsa_bonus_1, dsa_bonus_2=dsa_bonus_2)
+                tprint((state=="CA"), f"USA Google totals: {usa_rec1:.3f}, {usa_rec2:.3f}")
+                vote_split = calculate_vote_split(rec1_norm, base_fav1, rec2_norm, base_fav2, qprint=(state=="CA"), dsa_bonus_1=dsa_bonus_1, dsa_bonus_2=dsa_bonus_2, usa_rec1=usa_rec1, usa_rec2=usa_rec2)
                 pct1, pct2, turnout = vote_split['vote_A'], vote_split['vote_B'], vote_split['turnout']
                 tprint((state=="CA"), f"pct1: {pct1}, pct2: {pct2}, turnout: {turnout}")
                 demographic_vote_splits[state][demo] = {choice1: pct1, choice2: pct2}

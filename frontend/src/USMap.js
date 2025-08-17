@@ -40,13 +40,12 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
   const [stateColors, setStateColors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [currentComparison, setCurrentComparison] = useState('');
-  const [demographicBreakdown, setDemographicBreakdown] = useState({});
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const svgRef = useRef(null);
   // Add state to hold the selected breakdown type
   const [breakdownType, setBreakdownType] = useState('overall'); // 'overall', 'sentiment', 'recognition'
-  const [demographicVoteSplits, setDemographicVoteSplits] = useState({});
-  const [demographicVoteSplitComponents, setDemographicVoteSplitComponents] = useState({});
+  const [nationalDemographicData, setNationalDemographicData] = useState({});
+  const [nationalDemographicComponents, setNationalDemographicComponents] = useState({});
 
   // Function to update state colors - this will be used for electoral coloring
   const updateStateColor = (stateId, color) => {
@@ -146,9 +145,18 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       const comparisonResults = await ElectionService.compareChoices(choice1, choice2);
       console.log('Received comparison results:', comparisonResults);
       setStateColors(comparisonResults.state_colors);
-      setDemographicBreakdown(comparisonResults.demographic_breakdown || {});
-      setDemographicVoteSplits(comparisonResults.demographic_vote_splits || {});
-      setDemographicVoteSplitComponents(comparisonResults.demographic_vote_split_components || {});
+      
+      // Extract US national demographic data directly from the response
+      const nationalData = comparisonResults.national_demographic_vote_splits?.US || 
+                          comparisonResults.demographic_vote_splits?.US || {};
+      const nationalComponents = comparisonResults.national_demographic_vote_split_components?.US || 
+                                comparisonResults.demographic_vote_split_components?.US || {};
+      
+      console.log('National demographic data:', nationalData);
+      console.log('National demographic components:', nationalComponents);
+      
+      setNationalDemographicData(nationalData);
+      setNationalDemographicComponents(nationalComponents);
       
       // You can also access the detailed analysis data if needed:
       // console.log('Trends data:', comparisonResults.trends_data);
@@ -180,10 +188,10 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
     }
   };
 
-  // Order demographics: conservative, center-right, center, center-left, liberal
+  // Order demographics: conservative, center-right, moderate, center-left, liberal
   const demographicOrder = [
     'conservative',
-    'center',
+    'moderate',
     'liberal'
   ];
 
@@ -284,9 +292,9 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
         />
       </div>
       {/* Demographic Breakdown Bar Chart */}
-      {demographicBreakdown && Object.keys(demographicBreakdown).length > 0 && (
+      {nationalDemographicData && Object.keys(nationalDemographicData).length > 0 && (
         <div className="demographic-breakdown">
-          <h3>Demographic Vote Breakdown</h3>
+          <h3>National Demographic Vote Breakdown</h3>
           <div style={{ marginBottom: 12 }}>
             <button onClick={() => setBreakdownType('overall')} disabled={breakdownType === 'overall'}>Overall</button>
             <button onClick={() => setBreakdownType('sentiment')} disabled={breakdownType === 'sentiment'}>Sentiment Only</button>
@@ -294,16 +302,20 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
           </div>
           <div className="demographic-bars">
             {demographicOrder
-              .filter(demo => demographicBreakdown[demo])
+              .filter(demo => nationalDemographicData[demo] || (nationalDemographicComponents[demo] && breakdownType !== 'overall'))
               .map((demo) => {
                 let percent1 = 50, percent2 = 50;
-                if (breakdownType === 'overall' && demographicVoteSplits['US'] && demographicVoteSplits['US'][demo]) {
-                  percent1 = demographicVoteSplits['US'][demo][choice1] || 0;
-                  percent2 = demographicVoteSplits['US'][demo][choice2] || 0;
-                } else if (breakdownType !== 'overall' && demographicVoteSplitComponents['US'] && demographicVoteSplitComponents['US'][demo]) {
-                  percent1 = demographicVoteSplitComponents['US'][demo][breakdownType][choice1] || 0;
-                  percent2 = demographicVoteSplitComponents['US'][demo][breakdownType][choice2] || 0;
+                
+                if (breakdownType === 'overall' && nationalDemographicData[demo]) {
+                  // Use the main demographic data for overall breakdown
+                  percent1 = nationalDemographicData[demo][choice1] || 0;
+                  percent2 = nationalDemographicData[demo][choice2] || 0;
+                } else if (breakdownType !== 'overall' && nationalDemographicComponents[demo]?.[breakdownType]) {
+                  // Use component-specific data for sentiment/recognition only
+                  percent1 = nationalDemographicComponents[demo][breakdownType][choice1] || 0;
+                  percent2 = nationalDemographicComponents[demo][breakdownType][choice2] || 0;
                 }
+                
                 return (
                   <div className="demographic-bar-row" key={demo}>
                     <div className="demographic-label">{demo.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>

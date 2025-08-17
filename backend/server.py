@@ -1,10 +1,11 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
-import json
+import json, pprint
 from datetime import datetime
 import os, time, random
 from get_election_results import compare_google_trends, load_cache, save_cache
 from sentiment_service import sentiment_service
+from dsa_service import dsa_service
 import numpy as np
 
 # Simulation defaults for calc_state_vote_split
@@ -526,7 +527,6 @@ def get_combined_analysis(choice1, choice2):
 
         # Also inject 'US' into the per-state dicts for frontend simplicity
         demographic_vote_splits['US'] = national_demographic_vote_splits
-        demographic_vote_split_components['US'] = national_demographic_vote_split_components
 
         combined_results = {
             "state_colors": state_colors,
@@ -535,11 +535,7 @@ def get_combined_analysis(choice1, choice2):
             "electoral_tally": electoral_tally,
             "search_data": search_results,
             "sentiment_summary": sentiment_summary,
-            "demographic_breakdown": demo_breakdown,
             "demographic_vote_splits": demographic_vote_splits,
-            "demographic_vote_split_components": demographic_vote_split_components,
-            "national_demographic_vote_splits": {"US": national_demographic_vote_splits},
-            "national_demographic_vote_split_components": {"US": national_demographic_vote_split_components},
             "metadata": {
                 "choice1": choice1,
                 "choice2": choice2,
@@ -547,9 +543,58 @@ def get_combined_analysis(choice1, choice2):
                 "analysis_type": "combined"
             }
         }
+
+        # Save combined results to file instead of printing (too long for console)
+        try:
+            with open('combined_results.json', 'w') as f:
+                json.dump(combined_results, f, indent=2)
+            print(f"Combined results saved to combined_results.json")
+        except Exception as save_error:
+            print(f"Warning: Could not save combined results to file: {save_error}")
+        
         return jsonify(combined_results)
     except Exception as e:
         print(f"Error in combined analysis endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/dsa/<choice1>/<choice2>')
+def get_dsa_analysis(choice1, choice2):
+    """Get Document Similarity Analysis for two choices"""
+    try:
+        results = dsa_service.analyze(choice1, choice2)
+        
+        return jsonify({
+            "dsa_results": results,
+            "timestamp": datetime.now().isoformat(),
+            "message": f"DSA analysis: {choice1} vs {choice2}"
+        })
+        
+    except Exception as e:
+        print(f"Error in DSA endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/dsa-cache-stats')
+def get_dsa_cache_stats():
+    """Get DSA cache statistics"""
+    try:
+        stats = dsa_service.get_cache_stats()
+        return jsonify({
+            "cache_stats": stats,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/dsa-clear-cache', methods=['POST'])
+def clear_dsa_cache():
+    """Clear DSA cache"""
+    try:
+        dsa_service.clear_cache()
+        return jsonify({
+            "message": "DSA cache cleared successfully",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/health')

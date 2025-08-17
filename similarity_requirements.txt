@@ -1,0 +1,12 @@
+# Requirements for document_similarity_analysis.py
+# Install with: pip install -r similarity_requirements.txt
+
+# Core dependencies
+numpy>=1.21.0
+scikit-learn>=1.0.0
+
+# Optional but recommended for better embeddings
+sentence-transformers>=2.2.0
+
+# For better text processing (optional)
+nltk>=3.7

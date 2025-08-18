@@ -23,13 +23,16 @@ from sklearn.metrics.pairwise import cosine_similarity
 import json
 import argparse
 
+from sentence_transformers import SentenceTransformer
+
 # Try to import gensim for pre-trained word embeddings
-try:
-    import gensim.downloader as api
-    HAS_GENSIM = True
-except ImportError:
-    HAS_GENSIM = False
-    print("Warning: gensim not available. Word embeddings disabled.")
+HAS_GENSIM = False
+# try:
+#     import gensim.downloader as api
+#     HAS_GENSIM = True
+# except ImportError:
+#     HAS_GENSIM = False
+#     print("Warning: gensim not available. Word embeddings disabled.")
 
 # Try to import sentence transformers for better embeddings
 try:

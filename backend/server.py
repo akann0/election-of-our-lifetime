@@ -4,9 +4,9 @@ import json, pprint
 from datetime import datetime
 import os, time, random
 from typing import Dict, Tuple
-from get_election_results import compare_google_trends, load_cache, save_cache
-from sentiment_service import sentiment_service
-from dsa_service import dsa_service
+from .get_election_results import compare_google_trends, load_cache, save_cache
+from .sentiment_service import sentiment_service
+from .dsa_service import dsa_service
 import numpy as np
 
 # Simulation defaults for calc_state_vote_split

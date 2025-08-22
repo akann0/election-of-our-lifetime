@@ -11,7 +11,7 @@ from typing import Dict, List
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from dsa import DemographicSimilarityAnalyzer
+from .dsa import DemographicSimilarityAnalyzer
 
 class DSAService:
     """

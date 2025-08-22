@@ -16,7 +16,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "heroku-postbuild": "npm --prefix frontend ci && npm --prefix frontend run build && rm -rf backend/build && mkdir -p backend/build && cp -r frontend/build/* backend/build/"
   },
   "eslintConfig": {
     "extends": [

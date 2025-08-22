@@ -1,7 +1,8 @@
 // Service to handle election data and API calls
 class ElectionService {
   constructor() {
-    this.baseUrl = 'http://localhost:8000'; // Backend API URL
+    // Use relative API base in production (served by Flask), localhost in dev
+    this.baseUrl = (process.env.NODE_ENV === 'production') ? '' : 'http://localhost:8000';
   }
 
   // Fetch election results from backend

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import json, pprint
 from datetime import datetime
@@ -99,7 +99,7 @@ def calculate_vote_shares(marg_A, marg_B):
     voteB = 100.0 * voteB/turnout
     return voteA, voteB, turnout
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="build", static_url_path="")
 CORS(app)  # Enable CORS for frontend requests
 
 # Sample election data - in a real app this would come from a database
@@ -167,15 +167,7 @@ ELECTION_DATA = {
 
 @app.route('/')
 def home():
-    return jsonify({
-        "message": "Election Results API",
-        "version": "1.0",
-        "endpoints": [
-            "/election-results",
-            "/state/<state_code>",
-            "/summary"
-        ]
-    })
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/election-results')
 def get_election_results():
@@ -693,6 +685,14 @@ def clear_dsa_cache():
 def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+
+# Serve React build for all other routes not matched by API endpoints
+@app.route('/<path:path>')
+def static_proxy(path):
+    file_path = os.path.join(app.static_folder, path)
+    if os.path.isfile(file_path):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))

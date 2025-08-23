@@ -22,11 +22,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import json
 import argparse
+import gradio_client as grc
 
-from sentence_transformers import SentenceTransformer
+
 
 # Try to import gensim for pre-trained word embeddings
-HAS_GENSIM = False
+RUN_WITH_GRADIO = True
 # try:
 #     import gensim.downloader as api
 #     HAS_GENSIM = True
@@ -34,13 +35,8 @@ HAS_GENSIM = False
 #     HAS_GENSIM = False
 #     print("Warning: gensim not available. Word embeddings disabled.")
 
-# Try to import sentence transformers for better embeddings
-try:
-    from sentence_transformers import SentenceTransformer
-    HAS_SENTENCE_TRANSFORMERS = True
-except ImportError:
-    HAS_SENTENCE_TRANSFORMERS = False
-    print("Warning: sentence-transformers not available.")
+
+
 
 class DemographicSimilarityAnalyzer:
     """
@@ -53,34 +49,46 @@ class DemographicSimilarityAnalyzer:
         self.vectorizer = None
         
         # Try to load models in order of preference
-        if use_word_embeddings and HAS_GENSIM:
+
+        # Gradio Client will provide the embeddings
+        if RUN_WITH_GRADIO:
             try:
-                print("Loading GloVe word embeddings...")
-                self.word_model = api.load('glove-wiki-gigaword-100')
-                print("✅ GloVe model loaded successfully!")
-                self.embedding_method = "word_embeddings"
+                self.client = grc.Client("akann0/basic-word-vectorization")
+                self.embedding_method = "word_embeddings_gradio"
             except Exception as e:
-                print(f"❌ Failed to load GloVe: {e}")
-                self.word_model = None
+                print(f"Error: {e}")
+                exit(1)
+        else:
+            self.embedding_method = "word_embeddings_gradio"
+            if use_word_embeddings and HAS_GENSIM:
+                try:
+                    print("Loading GloVe word embeddings...")
+                    self.word_model = api.load('glove-wiki-gigaword-100')
+                    print("✅ GloVe model loaded successfully!")
+                    self.embedding_method = "word_embeddings"
+                except Exception as e:
+                    print(f"❌ Failed to load GloVe: {e}")
+                    self.word_model = None
+            
+            if self.word_model is None and use_sentence_embeddings and HAS_SENTENCE_TRANSFORMERS:
+                try:
+                    print("Loading sentence transformer model...")
+                    self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
+                    print("✅ Sentence transformer loaded successfully!")
+                    self.embedding_method = "sentence_embeddings"
+                except Exception as e:
+                    print(f"❌ Failed to load sentence transformer: {e}")
+                    self.sentence_model = None
+            
+            if self.word_model is None and self.sentence_model is None:
+                print("📝 Using TF-IDF vectorization as fallback...")
+                self.vectorizer = TfidfVectorizer(
+                    max_features=1000,
+                    stop_words='english',
+                    ngram_range=(1, 2)
+                )
+                self.embedding_method = "tfidf"
         
-        if self.word_model is None and use_sentence_embeddings and HAS_SENTENCE_TRANSFORMERS:
-            try:
-                print("Loading sentence transformer model...")
-                self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
-                print("✅ Sentence transformer loaded successfully!")
-                self.embedding_method = "sentence_embeddings"
-            except Exception as e:
-                print(f"❌ Failed to load sentence transformer: {e}")
-                self.sentence_model = None
-        
-        if self.word_model is None and self.sentence_model is None:
-            print("📝 Using TF-IDF vectorization as fallback...")
-            self.vectorizer = TfidfVectorizer(
-                max_features=1000,
-                stop_words='english',
-                ngram_range=(1, 2)
-            )
-            self.embedding_method = "tfidf"
         
         # Define demographic profiles
         self.demographic_profiles = self._create_demographic_profiles()
@@ -142,36 +150,28 @@ class DemographicSimilarityAnalyzer:
         words = text.lower().split()
         embeddings = []
         
-        for word in words:
-            try:
-                if word in self.word_model:
-                    embeddings.append(self.word_model[word])
-            except KeyError:
-                continue
+        try:
+            result = self.client.predict(
+                json_text=json.dumps(words),
+                api_name="/predict"
+            )
+        except KeyError:
+            print(f"❌ No words found for: {text}")
+            return np.zeros(self.word_model.vector_size)
         
-        if embeddings:
-            return np.mean(embeddings, axis=0)
+        if result:
+            return np.mean(result, axis=0)
         else:
             # Return zero vector if no words found
+            print(f"❌ No words found for: {text}")
             return np.zeros(self.word_model.vector_size)
 
     def get_embeddings(self, texts: List[str]) -> np.ndarray:
         """Get embeddings for a list of texts using the best available method"""
-        if self.word_model is not None:
-            # Use GloVe word embeddings
-            embeddings = []
-            for text in texts:
-                emb = self.get_word_embedding(text)
-                embeddings.append(emb)
-            return np.array(embeddings)
-        
-        elif self.sentence_model is not None:
-            # Use sentence transformers
-            return self.sentence_model.encode(texts)
-        
-        else:
-            # Fallback to TF-IDF
-            return self.vectorizer.fit_transform(texts).toarray()
+        embeddings = []
+        for text in texts:
+            embeddings.append(self.get_word_embedding(text))    
+        return np.array(embeddings)
     
     def calculate_similarities(self, choice1: str, choice2: str) -> Dict:
         """

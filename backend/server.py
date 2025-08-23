@@ -165,10 +165,6 @@ ELECTION_DATA = {
     "last_updated": datetime.now().isoformat()
 }
 
-@app.route('/')
-def home():
-    return send_from_directory(app.static_folder, 'index.html')
-
 @app.route('/election-results')
 def get_election_results():
     """Get complete election results"""
@@ -686,12 +682,16 @@ def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
 
-# Serve React build for all other routes not matched by API endpoints
+# Add a route to serve the React app
+@app.route('/')
+def serve_react_app():
+    return send_from_directory(app.static_folder, 'index.html')
+
+# Catch all other routes and serve React app (for client-side routing)
 @app.route('/<path:path>')
-def static_proxy(path):
-    file_path = os.path.join(app.static_folder, path)
-    if os.path.isfile(file_path):
-        return send_from_directory(app.static_folder, path)
+def serve_react_routes(path):
+    if path.startswith('static/'):
+        return send_from_directory(app.static_folder, path[7:])  # Remove 'static/' prefix
     return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':

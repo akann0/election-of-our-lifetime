@@ -1,8 +1,13 @@
+// import { HfInference } from "@huggingface/inference";
+import { Client } from "@gradio/client";
+
 // Service to handle election data and API calls
 class ElectionService {
   constructor() {
     // Use relative API base in production (served by Flask), localhost in dev
-    this.baseUrl = (process.env.NODE_ENV === 'production') ? '' : 'http://localhost:8000';
+    // this.baseUrl = (process.env.NODE_ENV === 'production') ? '' : 'http://localhost:8000';
+    // this.inference = new HfInference(process.env.HF_TOKEN);
+    this.client = new Client.connect("akann0/basic-word-vectorization");
   }
 
   // Fetch election results from backend
@@ -25,11 +30,13 @@ class ElectionService {
   async compareChoices(choice1, choice2) {
     try {
       console.log(`Comparing ${choice1} vs ${choice2} with combined analysis...`);
-      const response = await fetch(`${this.baseUrl}/combined-analysis/${encodeURIComponent(choice1)}/${encodeURIComponent(choice2)}`);
-      if (!response.ok) {
+      const response = await this.client.predict("/predict", { 		
+        choices: JSON.stringify([choice1, choice2]), 
+    });
+      if (!response.ok) { 
         throw new Error(`Combined analysis HTTP error! status: ${response.status}`);
       }
-      const combinedResults = await response.json();
+      const combinedResults = response.data;
       return combinedResults;
     } catch (error) {
       console.error('Error in combined analysis:', error);

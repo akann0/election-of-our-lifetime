@@ -5,7 +5,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from collections import defaultdict
 import praw
-from all_api_config import get_reddit_credentials
+from .all_api_config import get_reddit_credentials
 
 # Simple disk cache filename for sentiment data
 SENTIMENT_CACHE_FILE = "sentiment_cache.json"

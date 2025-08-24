@@ -53,9 +53,9 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
   };
 
   // Get color for a state, default to light gray if not set
-  const getStateColor = (stateId) => {
+  const getStateColor = useCallback((stateId) => {
     return stateColors[stateId] || '#e0e0e0';
-  };
+  }, [stateColors]);
 
   const updateScoreboard = (colors) => {
     let redTotal = 0;

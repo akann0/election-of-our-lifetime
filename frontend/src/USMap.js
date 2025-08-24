@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { ReactComponent as USMapSVG } from './us-map.svg';
 import ElectionService from './ElectionService';
 import './USMap.css';
@@ -92,7 +92,41 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
     });
     // Update scoreboard based on current state colors
     updateScoreboard(stateColors);
-  }, [getStateColor]);
+  }, [stateColors, getStateColor]);
+
+    // Handle running the comparison with user-provided choices
+    const handleRunComparison = useCallback(async (choice1, choice2) => {
+      setIsLoading(true);
+      try {
+        console.log(`Comparing ${choice1} vs ${choice2} with combined analysis...`);
+        const comparisonResults = await ElectionService.compareChoices(choice1, choice2);
+        console.log('Received comparison results:', comparisonResults);
+        setStateColors(comparisonResults.state_colors);
+        
+        // Extract US national demographic data directly from the response
+        const nationalData = comparisonResults.national_demographic_vote_splits?.US || 
+                            comparisonResults.demographic_vote_splits?.US || {};
+        
+        console.log('National demographic data:', nationalData);
+        console.log('Full comparison results:', comparisonResults);
+        
+        setNationalDemographicData(nationalData);
+        setAnalysisData(comparisonResults);
+        
+        // You can also access the detailed analysis data if needed:
+        // console.log('Trends data:', comparisonResults.trends_data);
+        // console.log('Sentiment data:', comparisonResults.sentiment_data);
+        // console.log('Analysis summary:', comparisonResults.analysis_summary);
+        
+      } catch (error) {
+        console.error('Error comparing choices:', error);
+      } finally {
+        setIsLoading(false);
+        if (onComparisonComplete) {
+          onComparisonComplete();
+        }
+      }
+    }, [onComparisonComplete, setIsLoading]);
 
   // Handle comparison when choice1 and choice2 change
   useEffect(() => {
@@ -132,40 +166,6 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
       newColor = '#e0e0e0'; // Gray
     }
     updateStateColor(stateId, newColor);
-  };
-
-  // Handle running the comparison with user-provided choices
-  const handleRunComparison = async (choice1, choice2) => {
-    setIsLoading(true);
-    try {
-      console.log(`Comparing ${choice1} vs ${choice2} with combined analysis...`);
-      const comparisonResults = await ElectionService.compareChoices(choice1, choice2);
-      console.log('Received comparison results:', comparisonResults);
-      setStateColors(comparisonResults.state_colors);
-      
-      // Extract US national demographic data directly from the response
-      const nationalData = comparisonResults.national_demographic_vote_splits?.US || 
-                          comparisonResults.demographic_vote_splits?.US || {};
-      
-      console.log('National demographic data:', nationalData);
-      console.log('Full comparison results:', comparisonResults);
-      
-      setNationalDemographicData(nationalData);
-      setAnalysisData(comparisonResults);
-      
-      // You can also access the detailed analysis data if needed:
-      // console.log('Trends data:', comparisonResults.trends_data);
-      // console.log('Sentiment data:', comparisonResults.sentiment_data);
-      // console.log('Analysis summary:', comparisonResults.analysis_summary);
-      
-    } catch (error) {
-      console.error('Error comparing choices:', error);
-    } finally {
-      setIsLoading(false);
-      if (onComparisonComplete) {
-        onComparisonComplete();
-      }
-    }
   };
 
   // Legacy function for random colors (kept for backward compatibility)

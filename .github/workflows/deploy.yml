@@ -45,7 +45,7 @@ jobs:
           cd frontend
           npm run build
         env:
-          ci: False
+          ci: false
           
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -17,10 +17,7 @@ const ElectoralCollege = new Map([
   ['DC', 3]
 ]);
 
-// Helper to convert -1 to 1 sentiment to 0-100% (50% = neutral)
-function sentimentToPercent(score) {
-  return (score + 1) * 50;
-}
+
 
 const loadingMessages = [
   'Counting ballots in swing states...',
@@ -95,7 +92,7 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
     });
     // Update scoreboard based on current state colors
     updateScoreboard(stateColors);
-  }, [stateColors]);
+  }, [getStateColor]);
 
   // Handle comparison when choice1 and choice2 change
   useEffect(() => {
@@ -106,7 +103,7 @@ const USMap = ({ choice1, choice2, onComparisonComplete, isLoading: parentIsLoad
         handleRunComparison(choice1, choice2);
       }
     }
-  }, [choice1, choice2]);
+  }, [choice1, choice2, currentComparison, handleRunComparison]);
 
   const isCurrentlyLoading = isLoading || parentIsLoading;
 
